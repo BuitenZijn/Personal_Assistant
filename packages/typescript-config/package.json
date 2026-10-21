@@ -1,0 +1,14 @@
+{
+  "name": "@pa/typescript-config",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@pa/prettier-config": "workspace:*",
+    "prettier": "^3.9.6"
+  },
+  "prettier": "@pa/prettier-config"
+}

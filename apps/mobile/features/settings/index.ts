@@ -1,0 +1,5 @@
+export { SettingsScreen } from './screens/SettingsScreen'
+export { EditNameScreen } from './screens/EditNameScreen'
+export { ChangePasswordScreen } from './screens/ChangePasswordScreen'
+export { ProfilePictureScreen } from './screens/ProfilePictureScreen'
+export { AccountPrivacyScreen } from './screens/account-privacy-screen'

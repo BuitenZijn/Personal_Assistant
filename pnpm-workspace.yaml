@@ -1,0 +1,36 @@
+packages:
+  - apps/*
+  - packages/*
+auditConfig:
+  ignoreCves:
+    - CVE-2025-71330
+    - CVE-2025-71329
+
+nodeLinker: hoisted
+
+# One version of each of these, everywhere in the workspace.
+#
+# React and React Native are native or near-native singletons: a second copy
+# does not just bloat the tree, it breaks the build (native modules) or throws
+# invalid-hook-call at runtime (React). Versions here track what the installed
+# Expo SDK expects — see `npx expo install --check`.
+overrides:
+  "esbuild@>=0.27.3 <0.28.1": 0.28.2
+  react: 19.2.3
+  # Must match `react` exactly; React refuses to start on a mismatched pair.
+  react-dom: 19.2.3
+  react-native: 0.86.3
+  # reanimated pins 1.2.1 exactly, expo-status-bar wants 1.3.1; 1.3.1 satisfies
+  # both once forced.
+  react-native-is-edge-to-edge: 1.3.1
+  react-native-reanimated: 4.5.1
+  # @tamagui/native accepts >=4.0.0 and pulled its own 5.7.0 alongside the
+  # SDK-compatible version the app uses. Two copies of a native module is a
+  # build hazard.
+  react-native-safe-area-context: 5.7.0
+  react-native-worklets: 0.10.1
+  # Security backports for transitive build tooling. Expo's xcode helper only
+  # uses uuid's stable v4 API, and the affected esbuild consumers accept the
+  # newer 0.x release.
+  uuid@7.0.3: 11.1.1
+

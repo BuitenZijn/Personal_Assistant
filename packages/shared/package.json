@@ -1,0 +1,26 @@
+{
+  "name": "@pa/shared",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./geo": "./src/geo.ts",
+    "./format": "./src/format.ts",
+    "./config": "./src/config.ts"
+  },
+  "scripts": {
+    "lint": "eslint . --max-warnings 0",
+    "check-types": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@pa/eslint-config": "workspace:*",
+    "@pa/prettier-config": "workspace:*",
+    "@pa/typescript-config": "workspace:*",
+    "typescript": "6.0.3",
+    "vitest": "^4.1.11"
+  },
+  "prettier": "@pa/prettier-config"
+}

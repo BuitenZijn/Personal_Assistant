@@ -1,0 +1,24 @@
+# Build outputs
+.nitro/
+.output/
+.tanstack/
+**/api
+**/build
+**/public
+
+# Generated files
+**/_generated/
+**/routeTree.gen.ts
+**/next-env.d.ts
+
+# Dependencies
+**/.venv/
+node_modules/
+pnpm-lock.yaml
+
+# Config files
+.prettierrc
+.prettierignore
+
+# Documentation
+**/README.md

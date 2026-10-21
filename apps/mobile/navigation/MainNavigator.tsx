@@ -1,0 +1,120 @@
+import React from 'react'
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
+import { getFocusedRouteNameFromRoute } from '@react-navigation/native'
+import type { RouteProp } from '@react-navigation/native'
+import { Home, Settings } from 'lucide-react-native'
+import { YStack, brandColors, neutralColors, monoFont } from '@pa/ui'
+import type { LucideIcon } from 'lucide-react-native'
+import type { MainTabParamList } from './types'
+import {
+  HomeStack,
+  SettingsStack,
+  homeFullScreenRoutes,
+  settingsFullScreenRoutes,
+} from './tabs'
+
+const Tab = createBottomTabNavigator<MainTabParamList>()
+
+/**
+ * Routes where the bottom tab bar should be completely hidden.
+ *
+ * Aggregated from each stack rather than listed here. A hardcoded set in this
+ * file is invisible to whoever adds a full-bleed screen three directories
+ * away, so declaring it next to the screen keeps the two from drifting.
+ */
+const TAB_BAR_HIDDEN_ROUTES = new Set<string>([
+  ...homeFullScreenRoutes,
+  ...settingsFullScreenRoutes,
+])
+
+function getTabBarStyle(route: RouteProp<MainTabParamList>) {
+  const focusedRoute = getFocusedRouteNameFromRoute(route)
+  if (focusedRoute && TAB_BAR_HIDDEN_ROUTES.has(focusedRoute)) {
+    return {
+      display: 'none' as const,
+    }
+  }
+  return {
+    backgroundColor: neutralColors.background.elevated,
+    borderTopColor: neutralColors.border.subtle,
+    borderTopWidth: 1,
+  }
+}
+
+/**
+ * Instrument tab icon: a 2px tick above the glyph marks the active tab.
+ */
+function TabIcon({
+  Icon,
+  color,
+  size,
+  focused,
+}: {
+  Icon: LucideIcon
+  color: string
+  size: number
+  focused: boolean
+}) {
+  return (
+    <YStack alignItems='center' gap={5}>
+      <YStack
+        width={24}
+        height={2}
+        borderRadius={1}
+        backgroundColor={focused ? brandColors.primary : 'transparent'}
+      />
+      <Icon size={size - 2} color={color} />
+    </YStack>
+  )
+}
+
+export default function MainNavigator() {
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: brandColors.primary,
+        tabBarInactiveTintColor: neutralColors.text.muted,
+        tabBarLabelStyle: {
+          fontFamily: monoFont.medium,
+          fontSize: 10,
+          letterSpacing: 0.4,
+          textTransform: 'uppercase',
+        },
+        tabBarStyle: {
+          backgroundColor: neutralColors.background.elevated,
+          borderTopColor: neutralColors.border.subtle,
+          borderTopWidth: 1,
+        },
+      }}
+    >
+      <Tab.Screen
+        name='HomeTab'
+        component={HomeStack}
+        options={({ route }) => ({
+          tabBarLabel: 'Home',
+          tabBarIcon: ({ color, size, focused }) => (
+            <TabIcon Icon={Home} color={color} size={size} focused={focused} />
+          ),
+          tabBarStyle: getTabBarStyle(route),
+        })}
+      />
+      <Tab.Screen
+        name='SettingsTab'
+        component={SettingsStack}
+        options={({ route }) => ({
+          tabBarLabel: 'Settings',
+          tabBarIcon: ({ color, size, focused }) => (
+            <TabIcon
+              Icon={Settings}
+              color={color}
+              size={size}
+              focused={focused}
+            />
+          ),
+          tabBarStyle: getTabBarStyle(route),
+        })}
+      />
+    </Tab.Navigator>
+  )
+}

@@ -1,0 +1,45 @@
+{
+  "name": "@pa/backend",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./api": {
+      "types": "./api.d.ts",
+      "default": "./api.js"
+    },
+    "./dataModel": {
+      "types": "./dataModel.d.ts"
+    },
+    "./types": {
+      "types": "./types.ts",
+      "default": "./types.ts"
+    },
+    "./convex/*": "./convex/*"
+  },
+  "scripts": {
+    "dev": "convex dev",
+    "setup": "convex dev --until-success",
+    "deploy": "npx convex deploy --preview-create prod",
+    "lint": "eslint . --max-warnings 0",
+    "check-types": "tsc --noEmit -p convex/tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@auth/core": "^0.41.3",
+    "@convex-dev/auth": "^0.0.95",
+    "convex": "^1.45.0",
+    "resend": "^6.25.0"
+  },
+  "devDependencies": {
+    "@edge-runtime/vm": "^5.0.0",
+    "@types/node": "^22.20.1",
+    "@pa/eslint-config": "workspace:*",
+    "@pa/prettier-config": "workspace:*",
+    "convex-test": "^0.0.56",
+    "globals": "^17.11.0",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.11"
+  },
+  "prettier": "@pa/prettier-config"
+}
