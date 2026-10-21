@@ -25,6 +25,7 @@ import {
   normalizeEmail,
   authEmailSendDecision,
   requireAuthEmail,
+  emailVerificationEnabled,
   tooManyAuthEmailsError,
   type AuthEmailKind,
 } from '../lib/auth'
@@ -362,7 +363,11 @@ export const resendVerificationCode = action({
     } = await ctx.runQuery(internal.functions.users.passwordAccountState, {
       email: args.email,
     })
-    if (account.accountId === null || account.verified) {
+    if (
+      !emailVerificationEnabled() ||
+      account.accountId === null ||
+      account.verified
+    ) {
       return { status: 'sent' }
     }
     const claim: { action: string; retryAfterMs?: number } =

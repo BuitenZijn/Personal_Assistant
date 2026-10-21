@@ -3,10 +3,7 @@
   "version": "1.0.0",
   "main": "index.ts",
   "scripts": {
-    "dev": "npx cross-env EXPO_EDITOR=code expo start",
-    "android:prebuild": "expo prebuild --platform android --clean && node -e \"const f='android/gradle/wrapper/gradle-wrapper.properties';require('fs').writeFileSync(f,require('fs').readFileSync(f,'utf8').replace(/gradle-[\\d.]+-bin/,'gradle-8.14.2-bin'))\"",
-    "android:build": "cd android && .\\gradlew assembleDebug -PreactNativeArchitectures=arm64-v8a",
-    "android:device": "adb install android/app/build/outputs/apk/debug/app-debug.apk",
+    "dev": "expo start --go",
     "lint": "eslint . --max-warnings 0",
     "check-types": "tsc --noEmit",
     "test": "jest"
@@ -26,7 +23,6 @@
     "expo": "~57.0.25",
     "expo-application": "~57.0.3",
     "expo-constants": "~57.0.19",
-    "expo-dev-client": "~57.0.19",
     "expo-device": "~57.0.2",
     "expo-file-system": "~57.0.7",
     "expo-font": "~57.0.4",

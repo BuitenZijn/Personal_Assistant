@@ -104,15 +104,18 @@ and mutation checks that the user is a member of that household.
   rename packages, switch UI text to English.
 - New local git repo with `main` + `develop`.
 - Point it at `tangible-aardvark-598`, set the auth env vars, sign in on the
-  phone with email + password.
+  phone with email + password, in **Expo Go** (no APK or dev build at this
+  stage).
+- No email verification at this stage: sign-up signs in straight away. It
+  can be turned on later with `AUTH_EMAIL_VERIFICATION=on` plus a Resend key.
 - Checks green locally (prettier, lint, types, tests).
 
 **Done when:** I can sign in on my phone and see an empty home screen.
 
 **Status (2026-10-21):** scaffold committed; schema and functions pushed to
-`tangible-aardvark-598`; JWT keys set; checks green locally. Left: the
-Resend key on the deployment, and a development build on the phone (the new
-app id means Ella's dev client can't be reused).
+`tangible-aardvark-598`; JWT keys set; checks green locally. Email
+verification off; the app runs in Expo Go. Left: sign in on the phone.
+Without a Resend key, "forgot password" can't send its email yet.
 
 ### Phase 0b — Collect&Go access analysis (spike, in parallel)
 

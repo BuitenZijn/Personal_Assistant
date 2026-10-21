@@ -17,7 +17,8 @@ Set with `npx convex env set <NAME> <value>` from this folder:
 | Name                     | What                                                           |
 | ------------------------ | -------------------------------------------------------------- |
 | `JWT_PRIVATE_KEY`, `JWKS` | from `node scripts/generateKeys.mjs`                          |
-| `AUTH_RESEND_KEY`        | Resend API key for verification and password-reset emails      |
+| `AUTH_EMAIL_VERIFICATION` | `on` to email a code on sign-up; unset (off) for now            |
+| `AUTH_RESEND_KEY`        | Resend API key for verification and password-reset emails; not set yet, so those emails fail |
 | `EMAIL_FROM`             | optional; defaults to `Personal Assistant <noreply@buitenzijnvzw.be>` |
 | `SITE_URL`               | optional; only for web redirects, unused while there is no web app |
 

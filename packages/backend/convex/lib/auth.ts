@@ -128,6 +128,15 @@ export const MAX_EMAIL_LENGTH = 254
 
 export const MIN_PASSWORD_LENGTH = 8
 
+/**
+ * Whether sign-up emails a code to confirm the address. Off unless the
+ * deployment sets `AUTH_EMAIL_VERIFICATION=on`: while only the household uses
+ * the app, accounts are not verified (see docs/PLAN.md, Phase 0).
+ */
+export function emailVerificationEnabled(): boolean {
+  return process.env.AUTH_EMAIL_VERIFICATION === 'on'
+}
+
 /** Sender of the auth emails when the deployment sets no `EMAIL_FROM`. */
 export const DEFAULT_EMAIL_FROM =
   'Personal Assistant <noreply@buitenzijnvzw.be>'

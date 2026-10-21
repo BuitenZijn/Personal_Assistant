@@ -13,6 +13,7 @@ import { ResendOTPPasswordReset } from './ResendOTPPasswordReset'
 import {
   MIN_PASSWORD_LENGTH,
   authError,
+  emailVerificationEnabled,
   requireAuthEmail,
   tooManyAuthEmailsError,
   type AuthEmailKind,
@@ -168,8 +169,8 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   providers: [
     (() => {
       const provider = Password({
-        // Enable email verification during sign-up
-        verify: ResendOTP,
+        // Email verification during sign-up, when the deployment turns it on
+        verify: emailVerificationEnabled() ? ResendOTP : undefined,
         // Enable password reset via email
         reset: ResendOTPPasswordReset,
         validatePasswordRequirements: validatePassword,
@@ -216,7 +217,11 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
             internal.functions.users.passwordAccountState,
             { email },
           )
-          const unverified = account.accountId !== null && !account.verified
+          // With verification off, every account counts as verified.
+          const unverified =
+            emailVerificationEnabled() &&
+            account.accountId !== null &&
+            !account.verified
 
           /**
            * Count an email about to go to the address: `send` it, `wait`
@@ -281,8 +286,8 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
             if (account.accountId === null) {
               // Names first: nothing is counted for a sign-up that fails.
               passwordProfile({ ...params, email: account.email })
-              await requireEmailClaim('verify')
-            } else if (account.verified) {
+              if (emailVerificationEnabled()) await requireEmailClaim('verify')
+            } else if (!unverified) {
               // The library would check the password here, with no limit
               // on wrong ones: signing up was a way to guess the password of
               // any account. So the right password doesn't sign in here
