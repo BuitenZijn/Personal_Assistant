@@ -109,6 +109,11 @@ and mutation checks that the user is a member of that household.
 
 **Done when:** I can sign in on my phone and see an empty home screen.
 
+**Status (2026-10-21):** scaffold committed; schema and functions pushed to
+`tangible-aardvark-598`; JWT keys set; checks green locally. Left: the
+Resend key on the deployment, and a development build on the phone (the new
+app id means Ella's dev client can't be reused).
+
 ### Phase 0b — Collect&Go access analysis (spike, in parallel)
 
 Automatic basket filling is a hard requirement, and Collect&Go has no public
