@@ -19,9 +19,7 @@ export function BrandHeader({ subtitle, compact = false }: BrandHeaderProps) {
         <Text weight='bold' size={compact ? '$8' : '$9'} textAlign='center'>
           Personal Assistant
         </Text>
-        <MicroLabel variant='brand' letterSpacing={3}>
-          Your household shopping
-        </MicroLabel>
+        <MicroLabel variant='brand'>Your household shopping</MicroLabel>
       </YStack>
       {subtitle ? (
         <Text size='$4' variant='muted' textAlign='center' maxWidth={320}>
@@ -32,7 +30,7 @@ export function BrandHeader({ subtitle, compact = false }: BrandHeaderProps) {
   )
 }
 
-/** Hairline divider with a micro-label, e.g. "NEW HERE?" */
+/** Hairline divider with a micro-label, e.g. "New here?" */
 export function AuthDivider({ label }: { label: string }) {
   return (
     <XStack alignItems='center' gap='$3' paddingVertical='$2'>

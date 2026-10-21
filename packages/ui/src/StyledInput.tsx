@@ -3,21 +3,17 @@ import { styled, Input, TextArea, Label, GetProps } from 'tamagui'
 import { neutralColors } from './colors'
 
 /**
- * StyledInput - Tamagui Input with Digital Compass styling
- *
- * Pre-styled with proper dark theme colors:
- * - Deep Slate background
- * - Proper border and text colors
- * - Focus states with brand accent
+ * StyledInput - Tamagui Input in the house style: a white field with a
+ * neutral border that turns teal on focus.
  */
 export const StyledInput = styled(Input, {
   name: 'StyledInput',
-  backgroundColor: neutralColors.background.page,
+  backgroundColor: neutralColors.background.elevated,
   borderWidth: 1,
   borderColor: neutralColors.border.default,
   color: neutralColors.text.primary,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  placeholderTextColor: neutralColors.text.secondary as any,
+  placeholderTextColor: neutralColors.text.placeholder as any,
   borderRadius: 10,
 
   focusStyle: {
@@ -39,17 +35,17 @@ export const StyledInput = styled(Input, {
 })
 
 /**
- * StyledTextArea - Tamagui TextArea with Digital Compass styling
+ * StyledTextArea - Tamagui TextArea in the house style
  */
 export const StyledTextArea = styled(TextArea, {
   name: 'StyledTextArea',
-  backgroundColor: neutralColors.background.page,
+  backgroundColor: neutralColors.background.elevated,
   borderWidth: 1,
   borderColor: neutralColors.border.default,
   color: neutralColors.text.primary,
   // Same as StyledInput: without it the placeholder is white like real text
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  placeholderTextColor: neutralColors.text.secondary as any,
+  placeholderTextColor: neutralColors.text.placeholder as any,
   borderRadius: 10,
 
   focusStyle: {
@@ -71,17 +67,15 @@ export const StyledTextArea = styled(TextArea, {
 })
 
 /**
- * FormLabel - Label with Digital Compass styling
+ * FormLabel - Label in the house style
  *
- * Uppercase, secondary color, small text for form field labels
+ * Sentence case, medium weight, muted: the label above a form field
  */
 export const FormLabelText = styled(Label, {
   name: 'FormLabelText',
-  fontSize: 12,
-  fontWeight: '600',
+  fontSize: 13,
+  fontWeight: '500',
   color: '$color11',
-  textTransform: 'uppercase',
-  letterSpacing: 0.5,
 })
 
 // Type exports

@@ -3,7 +3,7 @@ import { brandColors, neutralColors } from './colors'
 import { Text } from './Typography'
 
 /**
- * StyledSlider - Tamagui Slider with Digital Compass styling
+ * StyledSlider - Tamagui Slider in the house style
  *
  * Pre-styled with proper dark theme colors:
  * - Deep Slate track background
@@ -106,7 +106,7 @@ export type StyledSliderProps = GetProps<typeof StyledSliderFrame> & {
 /**
  * StyledSlider Component
  *
- * A styled slider component following the Digital Compass design system.
+ * A styled slider component in the house style.
  * Uses Solar Amber for the active track and thumb.
  */
 export function StyledSlider({

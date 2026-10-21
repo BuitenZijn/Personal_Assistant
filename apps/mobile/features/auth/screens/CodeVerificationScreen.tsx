@@ -15,7 +15,7 @@ import {
   LoadingSpinner,
   brandColors,
   neutralColors,
-  monoFont,
+  fontFaces,
 } from '@pa/ui'
 import { BrandHeader } from '../components/BrandHeader'
 import { useAuthActions } from '@convex-dev/auth/react'
@@ -251,7 +251,7 @@ export function CodeVerificationScreen({ navigation, route }: Props) {
                     textAlign: 'center',
                     fontSize: 24,
                     fontWeight: '600',
-                    fontFamily: monoFont.semibold,
+                    fontFamily: fontFaces.semibold,
                     backgroundColor: 'transparent',
                     color: neutralColors.text.primary,
                   }}

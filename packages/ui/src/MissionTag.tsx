@@ -5,7 +5,7 @@ import { neutralColors, brandColors, semanticColors } from './colors'
  * MissionTag - A styled container for mission type indicators
  *
  * Used in waypoint lists and mission slots to show mission types
- * with proper Digital Compass styling.
+ * in the house style.
  */
 export const MissionTag = styled(XStack, {
   name: 'MissionTag',
@@ -83,7 +83,7 @@ export const IconContainer = styled(XStack, {
         borderRadius: 12,
       },
     },
-    // Instrument: hairline tiles, not tinted fills — the tile is a 1px frame
+    // Hairline tiles, not tinted fills — the tile is a 1px frame
     // on the page background and the color lives on the border + glyph.
     // 'primary-solid' stays a true amber fill (callers must use dark ink).
     variant: {

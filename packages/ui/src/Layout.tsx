@@ -15,7 +15,7 @@ export const CenteredContainer = styled(YStack, {
 
 /**
  * PageContainer - Main page content container
- * Uses Digital Compass Deep Slate background
+ * Uses the house-style page background
  */
 export const PageContainer = styled(YStack, {
   name: 'PageContainer',

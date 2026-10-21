@@ -1,6 +1,6 @@
 import { styled, YStack, GetProps } from 'tamagui'
 import { Card } from './components'
-import { neutralColors } from './colors'
+import { cardColors, neutralColors } from './colors'
 
 /**
  * Panel - Extends Card for sidebars and elevated panels
@@ -15,10 +15,10 @@ export const Panel = styled(Card, {
   variants: {
     elevated: {
       true: {
-        shadowColor: 'rgba(0, 0, 0, 0.3)',
-        shadowOffset: { width: 0, height: 4 },
+        shadowColor: cardColors.shadow,
+        shadowOffset: { width: 0, height: 6 },
         shadowOpacity: 1,
-        shadowRadius: 12,
+        shadowRadius: 16,
       },
     },
   } as const,

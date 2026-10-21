@@ -44,7 +44,7 @@ const sizeStyles: Record<FormInputSize, CSSProperties> = {
  *
  * This uses a native HTML input element for proper form integration on web.
  * This ensures type="password", name, and other HTML attributes work correctly.
- * Uses Digital Compass design system colors.
+ * Uses the house-style colors.
  */
 export function FormInput({
   inputSize = 'md',

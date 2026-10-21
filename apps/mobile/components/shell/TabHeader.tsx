@@ -1,6 +1,6 @@
 import React from 'react'
 import { Pressable } from 'react-native'
-import { XStack, MicroLabel, Avatar, AvatarText } from '@pa/ui'
+import { XStack, Text, Avatar, AvatarText } from '@pa/ui'
 import { useNavigation } from '@react-navigation/native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { RemoteImage } from '../kit'
@@ -34,9 +34,9 @@ export function TabHeader({ title, rightAction }: TabHeaderProps) {
       alignItems='center'
       justifyContent='space-between'
     >
-      <MicroLabel variant='secondary' letterSpacing={5} fontSize={13}>
+      <Text size='$7' weight='semibold' numberOfLines={1} flexShrink={1}>
         {title}
-      </MicroLabel>
+      </Text>
       <XStack alignItems='center' gap='$3'>
         {rightAction}
         <Pressable

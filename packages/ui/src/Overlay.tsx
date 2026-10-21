@@ -3,7 +3,7 @@ import { neutralColors } from './colors'
 
 /**
  * Overlay Components - Styled modal, sheet, and popup containers
- * Uses Digital Compass design system colors for consistent dark theme overlays.
+ * Uses the house-style overlay colors.
  */
 
 /**

@@ -9,6 +9,7 @@ import {
   formatDurationClock,
   formatSpeed,
   formatCoordinates,
+  formatEuro,
 } from '../format'
 
 describe('formatDistance', () => {
@@ -77,5 +78,27 @@ describe('formatSpeed', () => {
 describe('formatCoordinates', () => {
   it('renders five decimal places', () => {
     expect(formatCoordinates(50.8467, 4.3525)).toBe('50.84670, 4.35250')
+  })
+})
+
+describe('formatEuro', () => {
+  it('uses a decimal comma and two decimals', () => {
+    expect(formatEuro(3.49)).toBe('€ 3,49')
+    expect(formatEuro(2)).toBe('€ 2,00')
+  })
+
+  it('groups thousands with a dot', () => {
+    expect(formatEuro(1234.5)).toBe('€ 1.234,50')
+    expect(formatEuro(1234567)).toBe('€ 1.234.567,00')
+  })
+
+  it('rounds to whole cents', () => {
+    expect(formatEuro(0.005)).toBe('€ 0,01')
+    expect(formatEuro(1.994)).toBe('€ 1,99')
+  })
+
+  it('puts the minus sign first, but not on zero', () => {
+    expect(formatEuro(-2.5)).toBe('-€ 2,50')
+    expect(formatEuro(-0.001)).toBe('€ 0,00')
   })
 })

@@ -3,7 +3,7 @@ import { brandColors, neutralColors } from './colors'
 
 /**
  * NavLink - Styled text for navigation links
- * Updated to use Digital Compass design system colors.
+ * Uses the house-style colors.
  *
  * Variants:
  * - active: Whether the link is currently active/selected (Solar Amber)

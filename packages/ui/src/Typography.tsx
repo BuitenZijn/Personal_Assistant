@@ -1,11 +1,11 @@
 import { useContext } from 'react'
 import { styled, Paragraph, GetProps } from 'tamagui'
 import { ButtonFillContext } from './Buttons'
-import { neutralColors, brandColors } from './colors'
+import { neutralColors, brandColors, semanticColors } from './colors'
+import { fontFaces } from './fonts'
 
 /**
  * Text - Base text component with semantic variants
- * Updated to use Digital Compass design system colors.
  *
  * Use this instead of raw Paragraph for consistent styling across the app.
  *
@@ -46,19 +46,19 @@ export const Text = styled(Paragraph, {
         color: 'rgba(255, 255, 255, 0.8)',
       },
       error: {
-        color: brandColors.destructive,
+        color: semanticColors.error.text,
       },
       success: {
-        color: brandColors.secondary,
+        color: semanticColors.success.text,
       },
       warning: {
-        color: '$brand',
+        color: semanticColors.warning.text,
       },
       info: {
-        color: brandColors.secondary,
+        color: semanticColors.info.text,
       },
       brand: {
-        color: '$brand',
+        color: brandColors.primaryText,
       },
     },
     size: {
@@ -151,8 +151,9 @@ const ButtonTextFrame = styled(Paragraph, {
       primary: {
         color: '$color12',
       },
+      /** On the tinted secondary button: dark teal */
       secondary: {
-        color: '$brand',
+        color: brandColors.primaryText,
       },
       danger: {
         color: '$color12',
@@ -174,14 +175,13 @@ const ButtonTextFrame = styled(Paragraph, {
         color: '$color11',
       },
       /**
-       * cta - primary call-to-action treatment (Instrument): uppercase,
-       * tracked, in the fill's label color. Opt-in per button.
+       * cta - the main call to action: sentence case, semibold, a size up,
+       * in the fill's label color. Opt-in per button.
        */
       cta: {
         color: '$onBrand',
-        fontWeight: '700',
-        textTransform: 'uppercase',
-        letterSpacing: 1.1,
+        fontWeight: '600',
+        fontSize: 17,
       },
     },
     /** Label on a filled Button; set by the parent Button. */
@@ -223,16 +223,16 @@ export const AlertText = styled(Paragraph, {
   variants: {
     variant: {
       error: {
-        color: brandColors.destructive,
+        color: semanticColors.error.text,
       },
       success: {
-        color: brandColors.secondary,
+        color: semanticColors.success.text,
       },
       warning: {
-        color: brandColors.primary,
+        color: semanticColors.warning.text,
       },
       info: {
-        color: brandColors.secondary,
+        color: semanticColors.info.text,
       },
     },
   } as const,
@@ -246,32 +246,22 @@ export const LinkText = styled(Paragraph, {
   name: 'LinkText',
   fontSize: 14,
   fontWeight: '600',
-  color: '$brand',
+  color: brandColors.primaryText,
   cursor: 'pointer',
   hoverStyle: {
-    color: '$brandHover',
+    color: brandColors.primaryHover,
   },
 })
 
 /**
- * Instrument mono faces — IBM Plex Mono. The app registers these names via
- * @expo-google-fonts/ibm-plex-mono; where a face isn't registered (web),
- * the platform falls back to its default font.
- */
-export const monoFont = {
-  regular: 'IBMPlexMono_400Regular',
-  medium: 'IBMPlexMono_500Medium',
-  semibold: 'IBMPlexMono_600SemiBold',
-  bold: 'IBMPlexMono_700Bold',
-} as const
-
-/**
- * MonoText - numerals and technical readouts (coordinates, distances, times).
- * Weight variants switch the font face — RN doesn't synthesize mono weights.
+ * MonoText - numbers that line up: prices, quantities, totals. Inter with
+ * tabular figures (the house style has no monospace face). Weight variants
+ * switch the font face — RN doesn't synthesize weights for custom fonts.
  */
 export const MonoText = styled(Paragraph, {
   name: 'MonoText',
-  fontFamily: monoFont.medium,
+  fontFamily: fontFaces.medium,
+  fontVariant: ['tabular-nums'],
   color: '$color12',
   fontSize: 15,
 
@@ -280,8 +270,8 @@ export const MonoText = styled(Paragraph, {
       default: { color: '$color12' },
       muted: { color: '$color11' },
       subtle: { color: '$color1' },
-      brand: { color: '$brand' },
-      success: { color: brandColors.secondary },
+      brand: { color: brandColors.primaryText },
+      success: { color: semanticColors.success.text },
     },
     size: {
       $1: { fontSize: 11, lineHeight: 14 },
@@ -293,10 +283,10 @@ export const MonoText = styled(Paragraph, {
       $7: { fontSize: 40, lineHeight: 46 },
     },
     weight: {
-      normal: { fontFamily: monoFont.regular },
-      medium: { fontFamily: monoFont.medium },
-      semibold: { fontFamily: monoFont.semibold },
-      bold: { fontFamily: monoFont.bold },
+      normal: { fontFamily: fontFaces.regular },
+      medium: { fontFamily: fontFaces.medium },
+      semibold: { fontFamily: fontFaces.semibold },
+      bold: { fontFamily: fontFaces.bold },
     },
   } as const,
 
@@ -308,24 +298,22 @@ export const MonoText = styled(Paragraph, {
 })
 
 /**
- * MicroLabel - uppercase tracked section/status labels ("RESUME QUEST",
- * "WAYPOINTS"). The Instrument system's replacement for ad-hoc section text.
+ * MicroLabel - small section and field labels ("Email address", "Profile").
+ * Sentence case, medium weight, muted: the house style never shouts.
  */
 export const MicroLabel = styled(Paragraph, {
   name: 'MicroLabel',
-  fontFamily: monoFont.medium,
-  fontSize: 11,
-  lineHeight: 15,
-  letterSpacing: 1.6,
-  textTransform: 'uppercase',
-  color: '$color1',
+  fontFamily: fontFaces.medium,
+  fontSize: 13,
+  lineHeight: 18,
+  color: '$color11',
 
   variants: {
     variant: {
-      default: { color: '$color1' },
-      secondary: { color: '$color11' },
-      brand: { color: '$brand' },
-      success: { color: brandColors.secondary },
+      default: { color: '$color11' },
+      secondary: { color: '$color7' },
+      brand: { color: brandColors.primaryText },
+      success: { color: semanticColors.success.text },
     },
   } as const,
 

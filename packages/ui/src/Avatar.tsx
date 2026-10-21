@@ -3,7 +3,7 @@ import { brandColors, neutralColors } from './colors'
 
 /**
  * Avatar - A circular avatar component for displaying user initials or images
- * Updated to use Digital Compass design system colors.
+ * Uses the house-style colors.
  *
  * Variants:
  * - variant: primary (default - Solar Amber), success, warning, error, info, muted

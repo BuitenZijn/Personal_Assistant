@@ -119,11 +119,9 @@ export const TableHeadCell = styled(XStack, {
  */
 export const TableHeadText = styled(Text, {
   name: 'TableHeadText',
-  fontSize: 12,
+  fontSize: 13,
   fontWeight: '600',
   color: neutralColors.text.secondary,
-  textTransform: 'uppercase',
-  letterSpacing: 0.5,
   userSelect: 'none',
 
   variants: {

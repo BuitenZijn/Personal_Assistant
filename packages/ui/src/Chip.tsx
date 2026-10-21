@@ -6,7 +6,7 @@ import { neutralColors } from './colors'
 /**
  * ChipFrame - Hairline chip frame for micro-label status/type chips.
  *
- * Instrument-system replacement for tinted Badge pills: 1px outline in the
+ * House-style replacement for tinted Badge pills: 1px outline in the
  * status color, 6px radius, no background fill.
  */
 export const ChipFrame = styled(XStack, {

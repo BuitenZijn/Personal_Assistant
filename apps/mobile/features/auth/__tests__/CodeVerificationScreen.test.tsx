@@ -55,7 +55,7 @@ jest.mock('@pa/ui', () => {
       ),
     brandColors: color,
     neutralColors: new Proxy({}, { get: () => color }),
-    monoFont: color,
+    fontFaces: color,
   }
 })
 

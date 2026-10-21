@@ -1,9 +1,10 @@
 import { styled, GetProps, YStack, Paragraph } from 'tamagui'
 import { brandColors, neutralColors } from './colors'
+import { fontFaces } from './fonts'
 
 /**
  * StatCard - A card for displaying statistics with colored values
- * Updated to use Digital Compass design system colors.
+ * Uses the house-style colors.
  *
  * Variants:
  * - variant: primary (default), success, warning, error, info
@@ -11,7 +12,7 @@ import { brandColors, neutralColors } from './colors'
  */
 export const StatCard = styled(YStack, {
   name: 'StatCard',
-  // Instrument: hairline tile on the page background, not a filled card
+  // Hairline tile on the page background, not a filled card
   backgroundColor: 'transparent',
   borderRadius: 10,
   borderWidth: 1,
@@ -50,17 +51,15 @@ export const StatCard = styled(YStack, {
  */
 export const StatLabel = styled(Paragraph, {
   name: 'StatLabel',
-  fontFamily: 'IBMPlexMono_500Medium',
-  fontSize: 11,
-  lineHeight: 15,
-  letterSpacing: 1.4,
-  textTransform: 'uppercase',
+  fontFamily: fontFaces.medium,
+  fontSize: 13,
+  lineHeight: 18,
   color: neutralColors.text.muted,
 })
 
 /**
  * StatValue - Value display for a stat card with color variants
- * Uses Digital Compass accent colors for visual distinction.
+ * Uses the semantic colors for visual distinction.
  *
  * Use variant="neutral" for plain uncolored numbers (replaces BigNumber).
  *
@@ -73,7 +72,7 @@ export const StatLabel = styled(Paragraph, {
  */
 export const StatValue = styled(Paragraph, {
   name: 'StatValue',
-  fontFamily: 'IBMPlexMono_600SemiBold',
+  fontFamily: fontFaces.semibold,
   fontSize: 32,
 
   variants: {
@@ -102,17 +101,17 @@ export const StatValue = styled(Paragraph, {
       $7: {
         fontSize: 26,
         lineHeight: 32,
-        fontFamily: 'IBMPlexMono_600SemiBold',
+        fontFamily: fontFaces.semibold,
       },
       $9: {
         fontSize: 32,
         lineHeight: 38,
-        fontFamily: 'IBMPlexMono_600SemiBold',
+        fontFamily: fontFaces.semibold,
       },
       $10: {
         fontSize: 40,
         lineHeight: 46,
-        fontFamily: 'IBMPlexMono_600SemiBold',
+        fontFamily: fontFaces.semibold,
       },
     },
   } as const,

@@ -3,19 +3,20 @@ import { cardColors } from './colors'
 
 /**
  * FormCard - Elevated card for forms (auth, settings, etc.)
- * A blue card whose contents use the `card` theme (white text, white buttons).
+ * A white card with the soft navy shadow; its contents use the `card` theme.
  */
 const FormCardFrame = styled(TamaguiCard, {
   name: 'FormCard',
   padding: '$6',
   backgroundColor: cardColors.background,
-  borderRadius: 12,
+  borderRadius: 10,
   borderWidth: 1,
   borderColor: cardColors.background,
-  elevation: 4,
-  shadowColor: '#000',
-  shadowRadius: 20,
-  shadowOpacity: 0.3,
+  elevation: 2,
+  shadowColor: cardColors.shadow,
+  shadowOffset: { width: 0, height: 3 },
+  shadowRadius: 8,
+  shadowOpacity: 1,
 
   variants: {
     size: {
@@ -25,11 +26,11 @@ const FormCardFrame = styled(TamaguiCard, {
       },
       $5: {
         padding: '$5',
-        borderRadius: 12,
+        borderRadius: 10,
       },
       $6: {
         padding: '$6',
-        borderRadius: 12,
+        borderRadius: 10,
       },
     },
   } as const,

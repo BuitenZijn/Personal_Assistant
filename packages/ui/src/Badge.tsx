@@ -9,7 +9,7 @@ import {
 
 /**
  * Badge - A small label/tag component for displaying status, categories, etc.
- * Updated to use Digital Compass design system colors.
+ * Uses the house-style colors.
  */
 export const Badge = styled(TamaguiCard, {
   name: 'Badge',
@@ -41,7 +41,7 @@ export const Badge = styled(TamaguiCard, {
       debug: {
         backgroundColor: roleColors.debug.background,
       },
-      // New Digital Compass variants
+      // Semantic variants
       active: {
         backgroundColor: statusColors.active.background,
       },
@@ -111,7 +111,7 @@ export const BadgeText = styled(Paragraph, {
       debug: {
         color: roleColors.debug.text,
       },
-      // New Digital Compass variants
+      // Semantic variants
       active: {
         color: statusColors.active.text,
       },

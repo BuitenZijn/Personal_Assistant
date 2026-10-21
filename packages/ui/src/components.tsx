@@ -1,18 +1,19 @@
 import { styled, GetProps, YStack, Theme } from 'tamagui'
-import { brandColors, cardColors } from './colors'
+import { cardColors, neutralColors, semanticColors } from './colors'
 
 /**
- * Card - Primary container component for the Ella design system.
+ * Card - Primary container component of the house style.
  *
  * This is the main card component. Use it for all card-like containers.
  *
  * Variants:
- * - `default`: Blue card; its contents use the `card` theme (white text)
- * - `outlined`: Blue card with a light border (also tells nested cards apart)
- * - `highlight`: Blue card with a white border for emphasis
- * - `muted`: Darker blue card
+ * - `default`: White card with the soft navy shadow
+ * - `outlined`: White card with a hairline instead of a shadow (nested cards)
+ * - `highlight`: White card with a teal border (the selected option)
+ * - `muted`: Grey-blue card, flat (secondary information)
  * - `success`: Green-tinted for success states
  * - `ghost`: No background or border (container only)
+ * - `subtle`: White card, flat
  *
  * Size: "$3" | "$4" | "$5" | "$6" (use Tamagui size tokens)
  *
@@ -28,13 +29,28 @@ import { brandColors, cardColors } from './colors'
  * // Highlighted card
  * <Card variant="highlight">Important content</Card>
  */
+/** 0 3px 8px of navy at 10%: the one shadow of the house style. */
+const cardShadow = {
+  shadowColor: cardColors.shadow,
+  shadowOffset: { width: 0, height: 3 },
+  shadowOpacity: 1,
+  shadowRadius: 8,
+  elevation: 2,
+} as const
+
+const flat = {
+  shadowOpacity: 0,
+  elevation: 0,
+} as const
+
 const CardFrame = styled(YStack, {
   name: 'Card',
-  borderRadius: 12,
+  borderRadius: 10,
   padding: '$4',
   backgroundColor: cardColors.background,
   borderWidth: 1,
   borderColor: cardColors.background,
+  ...cardShadow,
 
   variants: {
     variant: {
@@ -45,28 +61,33 @@ const CardFrame = styled(YStack, {
       outlined: {
         backgroundColor: cardColors.background,
         borderColor: cardColors.border,
+        ...flat,
       },
       highlight: {
         backgroundColor: cardColors.background,
         borderWidth: 2,
-        borderColor: cardColors.text,
+        borderColor: neutralColors.border.focus,
       },
       muted: {
-        backgroundColor: cardColors.hover,
-        borderColor: cardColors.hover,
+        backgroundColor: neutralColors.background.page,
+        borderColor: neutralColors.background.page,
+        ...flat,
       },
       success: {
-        backgroundColor: brandColors.secondaryLight,
-        borderColor: brandColors.secondary,
+        backgroundColor: semanticColors.success.surface,
+        borderColor: semanticColors.success.border,
+        ...flat,
       },
       ghost: {
         padding: 0,
         backgroundColor: 'transparent',
         borderWidth: 0,
+        ...flat,
       },
       subtle: {
         backgroundColor: cardColors.background,
         borderWidth: 0,
+        ...flat,
       },
     },
     size: {
@@ -76,15 +97,15 @@ const CardFrame = styled(YStack, {
       },
       $4: {
         padding: '$4',
-        borderRadius: 12,
+        borderRadius: 10,
       },
       $5: {
         padding: '$5',
-        borderRadius: 12,
+        borderRadius: 10,
       },
       $6: {
         padding: '$6',
-        borderRadius: 12,
+        borderRadius: 10,
       },
     },
     interactive: {
@@ -92,7 +113,6 @@ const CardFrame = styled(YStack, {
         cursor: 'pointer',
         hoverStyle: {
           backgroundColor: cardColors.hover,
-          borderColor: cardColors.text,
         },
         pressStyle: {
           scale: 0.99,
@@ -108,18 +128,17 @@ const CardFrame = styled(YStack, {
   },
 })
 
-/** Card variants drawn blue, whose contents use the `card` theme. */
-const BLUE_CARD_VARIANTS: ReadonlySet<string> = new Set([
+/** Card variants drawn white, whose contents use the `card` theme. */
+const WHITE_CARD_VARIANTS: ReadonlySet<string> = new Set([
   'default',
   'outlined',
   'highlight',
-  'muted',
   'subtle',
 ])
 
 export const Card = CardFrame.styleable(function Card(props, ref) {
   const frame = <CardFrame ref={ref} {...props} />
-  if (!BLUE_CARD_VARIANTS.has(props.variant ?? 'default')) return frame
+  if (!WHITE_CARD_VARIANTS.has(props.variant ?? 'default')) return frame
   return <Theme name='card'>{frame}</Theme>
 })
 

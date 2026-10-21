@@ -124,7 +124,7 @@ export function SignalState({
         </YStack>
       </YStack>
       <YStack alignItems='center' gap='$2'>
-        <MonoText size='$2' variant='success' letterSpacing={1.2}>
+        <MonoText size='$2' variant='success'>
           {label}
         </MonoText>
         {sublabel ? <MicroLabel>{sublabel}</MicroLabel> : null}

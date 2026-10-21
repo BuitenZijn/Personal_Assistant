@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { getFocusedRouteNameFromRoute } from '@react-navigation/native'
 import type { RouteProp } from '@react-navigation/native'
 import { Home, Settings } from 'lucide-react-native'
-import { YStack, brandColors, neutralColors, monoFont } from '@pa/ui'
+import { YStack, brandColors, neutralColors, fontFaces } from '@pa/ui'
 import type { LucideIcon } from 'lucide-react-native'
 import type { MainTabParamList } from './types'
 import {
@@ -42,7 +42,7 @@ function getTabBarStyle(route: RouteProp<MainTabParamList>) {
 }
 
 /**
- * Instrument tab icon: a 2px tick above the glyph marks the active tab.
+ * Tab icon: a 2px teal tick above the glyph marks the active tab.
  */
 function TabIcon({
   Icon,
@@ -76,10 +76,8 @@ export default function MainNavigator() {
         tabBarActiveTintColor: brandColors.primary,
         tabBarInactiveTintColor: neutralColors.text.muted,
         tabBarLabelStyle: {
-          fontFamily: monoFont.medium,
-          fontSize: 10,
-          letterSpacing: 0.4,
-          textTransform: 'uppercase',
+          fontFamily: fontFaces.medium,
+          fontSize: 12,
         },
         tabBarStyle: {
           backgroundColor: neutralColors.background.elevated,

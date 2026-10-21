@@ -2,7 +2,7 @@ import { styled, GetProps, H1, H2, H3, Paragraph } from 'tamagui'
 
 /**
  * PageTitle - Main page heading
- * Uses Digital Compass design system colors.
+ * Uses the house-style colors.
  */
 export const PageTitle = styled(H1, {
   name: 'PageTitle',
@@ -13,7 +13,7 @@ export const PageTitle = styled(H1, {
 
 /**
  * SectionTitle - Section heading within a page
- * Uses Digital Compass design system colors.
+ * Uses the house-style colors.
  */
 export const SectionTitle = styled(H2, {
   name: 'SectionTitle',
@@ -24,7 +24,7 @@ export const SectionTitle = styled(H2, {
 
 /**
  * CardTitle - Smaller heading for cards
- * Uses Digital Compass design system colors.
+ * Uses the house-style colors.
  */
 export const CardTitle = styled(H3, {
   name: 'CardTitle',
@@ -35,7 +35,7 @@ export const CardTitle = styled(H3, {
 
 /**
  * BodyText - Regular body text
- * Uses Digital Compass design system colors.
+ * Uses the house-style colors.
  */
 export const BodyText = styled(Paragraph, {
   name: 'BodyText',
@@ -72,7 +72,7 @@ export const BodyText = styled(Paragraph, {
 
 /**
  * Caption - Small text for metadata, timestamps, etc.
- * Uses Digital Compass design system colors.
+ * Uses the house-style colors.
  */
 export const Caption = styled(Paragraph, {
   name: 'Caption',
@@ -100,7 +100,7 @@ export const Caption = styled(Paragraph, {
 
 /**
  * ValueText - Text for displaying values
- * Uses Digital Compass design system colors.
+ * Uses the house-style colors.
  */
 export const ValueText = styled(Paragraph, {
   name: 'ValueText',

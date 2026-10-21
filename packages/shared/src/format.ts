@@ -129,3 +129,20 @@ export function formatSpeed(metersPerSecond: number): string {
 export function formatCoordinates(latitude: number, longitude: number): string {
   return `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`
 }
+
+/**
+ * Format an amount in euros the Belgian way: euro sign, a space, a decimal
+ * comma and a dot between thousands. Rounds to whole cents.
+ *
+ * @example formatEuro(3.49) // "€ 3,49"
+ * @example formatEuro(1234.5) // "€ 1.234,50"
+ * @example formatEuro(-2) // "-€ 2,00"
+ */
+export function formatEuro(amount: number): string {
+  const cents = Math.round(Math.abs(amount) * 100)
+  const whole = Math.floor(cents / 100)
+    .toString()
+    .replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+  const fraction = (cents % 100).toString().padStart(2, '0')
+  return `${amount < 0 && cents > 0 ? '-' : ''}€ ${whole},${fraction}`
+}

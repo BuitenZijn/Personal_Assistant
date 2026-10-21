@@ -1,8 +1,8 @@
 import { createContext } from 'react'
 import { styled, GetProps, Button as TamaguiButton } from 'tamagui'
-import { brandColors } from './colors'
+import { brandColors, semanticColors } from './colors'
 
-/** Variants whose background is a light brand fill (amber, teal, ember). */
+/** Variants with a solid fill and a white label. */
 const FILLED_VARIANTS: ReadonlySet<string> = new Set([
   'primary',
   'danger',
@@ -10,13 +10,13 @@ const FILLED_VARIANTS: ReadonlySet<string> = new Set([
   'warning',
 ])
 
-/** Filled variants in the brand color, which turns white on a blue card. */
+/** Filled variants in the brand color (teal). */
 const BRAND_VARIANTS: ReadonlySet<string> = new Set(['primary', 'warning'])
 
 /**
  * Set inside a filled Button: 'brand' for the brand fill (its label follows
- * the theme, blue on a card), 'status' for the danger and success fills
- * (white label). ButtonText reads it.
+ * the theme's `onBrand`), 'status' for the danger and success fills (white
+ * label). ButtonText reads it.
  */
 export type ButtonFill = 'brand' | 'status' | false
 export const ButtonFillContext = createContext<ButtonFill>(false)
@@ -67,11 +67,10 @@ const ButtonFrame = styled(TamaguiButton, {
         hoverStyle: { backgroundColor: '$brandHover' },
         pressStyle: { opacity: 0.9, scale: 0.98 },
       },
+      /** Tinted teal fill with a dark teal label: the second action */
       secondary: {
-        backgroundColor: 'transparent',
-        borderWidth: 1,
-        borderColor: '$brand',
-        hoverStyle: { backgroundColor: brandColors.primaryLight },
+        backgroundColor: brandColors.primaryLight,
+        hoverStyle: { backgroundColor: brandColors.primaryLight, opacity: 0.9 },
         pressStyle: { opacity: 0.9, scale: 0.98 },
       },
       danger: {
@@ -80,8 +79,8 @@ const ButtonFrame = styled(TamaguiButton, {
         pressStyle: { opacity: 0.9, scale: 0.98 },
       },
       success: {
-        backgroundColor: brandColors.secondary,
-        hoverStyle: { backgroundColor: brandColors.secondaryHover },
+        backgroundColor: semanticColors.success.main,
+        hoverStyle: { backgroundColor: semanticColors.success.hover },
         pressStyle: { opacity: 0.9, scale: 0.98 },
       },
       warning: {
@@ -129,14 +128,14 @@ const ButtonFrame = styled(TamaguiButton, {
 
 /**
  * Button - Main action button
- * Updated to use Digital Compass design system colors.
  *
  * Variants: primary, secondary, danger, success, warning, ghost, outline, outline-danger
  * Sizes: $3, $4, $5
  *
  * A ButtonText inside a filled variant (primary, danger, success, warning)
  * takes that fill's label color automatically, unless the button overrides
- * its background or the text sets its own color.
+ * its background or the text sets its own color. Pair `secondary` with
+ * `<ButtonText variant='secondary'>`.
  */
 export const Button = ButtonFrame.styleable(function Button(props, ref) {
   const variant = props.variant ?? 'primary'
@@ -153,7 +152,6 @@ export const Button = ButtonFrame.styleable(function Button(props, ref) {
 
 /**
  * IconButton - A small button typically used for actions in cards/lists
- * Updated to use Digital Compass design system colors.
  */
 export const IconButton = styled(TamaguiButton, {
   name: 'IconButton',

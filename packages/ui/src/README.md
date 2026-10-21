@@ -1,6 +1,6 @@
-# Ella UI Components
+# UI Components
 
-This package contains the shared UI components for Ella's web and mobile apps, built on top of Tamagui.
+This package contains the shared UI components of the Personal Assistant app, built on Tamagui. The house style they implement is described in `.claude/skills/house-style/SKILL.md`.
 
 ## Table of Contents
 
@@ -321,7 +321,7 @@ import { neutralColors, brandColors } from "./colors";
 
 /**
  * ComponentName - Brief description
- * Uses Digital Compass design system colors.
+ * Uses the house-style colors.
  *
  * Variants:
  * - variant: "default" | "primary" | "danger"

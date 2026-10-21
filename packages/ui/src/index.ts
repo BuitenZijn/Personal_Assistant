@@ -88,7 +88,6 @@ export {
   LinkText,
   MonoText,
   MicroLabel,
-  monoFont,
   type TextProps,
   type ButtonTextProps,
   type AlertTextProps,
@@ -185,6 +184,7 @@ export {
   statusColors,
   teamColors,
   overlayColors,
+  gradientColors,
   type BrandColors,
   type SemanticColors,
   type NeutralColors,
@@ -194,6 +194,9 @@ export {
   type OverlayColors,
   type TeamColor,
 } from './colors'
+
+// Typeface faces (Inter)
+export { fontFaces } from './fonts'
 
 // Status indicators and color pickers
 export {
@@ -246,7 +249,7 @@ export {
 // Readout components - instrument label/value pairs
 export { Readout, ReadoutRow, type ReadoutProps } from './Readout'
 
-// Chip components - hairline micro-label chips (Instrument system)
+// Chip components - hairline micro-label chips
 export { ChipFrame, StatusChip, type StatusChipProps } from './Chip'
 
 // Mission & icon components

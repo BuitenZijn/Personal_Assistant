@@ -24,7 +24,7 @@ import { semanticColors, cardColors } from './colors'
 const InfoCardFrame = styled(YStack, {
   name: 'InfoCard',
   padding: '$5',
-  borderRadius: 12,
+  borderRadius: 10,
   borderWidth: 1,
   gap: '$3',
 
@@ -32,7 +32,7 @@ const InfoCardFrame = styled(YStack, {
     variant: {
       default: {
         backgroundColor: cardColors.background,
-        borderColor: cardColors.background,
+        borderColor: cardColors.border,
       },
       success: {
         backgroundColor: semanticColors.success.surface,
@@ -60,17 +60,17 @@ const InfoCardFrame = styled(YStack, {
       '$3.5': {
         padding: '$3.5',
         gap: '$2',
-        borderRadius: 12,
+        borderRadius: 10,
       },
       $4: {
         padding: '$4',
         gap: '$2',
-        borderRadius: 12,
+        borderRadius: 10,
       },
       $5: {
         padding: '$5',
         gap: '$3',
-        borderRadius: 12,
+        borderRadius: 10,
       },
     },
   } as const,
