@@ -1,6 +1,7 @@
 # Personal Shopping Assistant — Plan
 
-Status: **draft v3**, all open questions answered. Nothing is built yet.
+Status: **draft v3**, all open questions answered. Phases 0 to 3 are
+built; see each phase's status line.
 
 ## Goal
 
@@ -84,8 +85,8 @@ Convex backend (tangible-aardvark-598, eu-west-1)
 | `households`            | name, people we cook for (name, age, diet, allergies, dislikes), cooking time on weekdays/weekends, budget per week, number of dinners to plan, preferences (cuisines, "less meat") |
 | `householdMembers`      | household → user, role (`owner` / `member`). App users who share the household; not every person we cook for needs an account                                                       |
 | `householdInvites`      | email, household, token, expiry; sent with Resend (already in Ella)                                                                                                                 |
-| `recipeSites`           | household → site name, base URL, enabled                                                                                                                                            |
-| `recipes`               | title, source URL, site, servings, time, ingredients (name, amount, unit), steps, tags, image                                                                                       |
+| `recipes`               | title, source URL, site, servings, time, course, ingredients (name, amount, unit, site ingredient id), steps, tags, image; shared by all households                                 |
+| `householdRecipes`      | household → recipe, when saved (picked for a plan or added by link)                                                                                                                 |
 | `products`              | one row per product: Collect&Go product id (if known), article number from receipts (if present), name, brand, unit/size, category, last price                                      |
 | `receipts`              | date, store, total                                                                                                                                                                  |
 | `receiptLines`          | receipt → product, quantity, price, discount                                                                                                                                        |
@@ -115,7 +116,8 @@ and mutation checks that the user is a member of that household.
 **Status (2026-10-21):** scaffold committed; schema and functions pushed to
 `tangible-aardvark-598`; JWT keys set; checks green locally. Email
 verification off; the app runs in Expo Go. Left: sign in on the phone.
-Without a Resend key, "forgot password" can't send its email yet.
+Without a Resend key, "forgot password" can't send its email yet. The house
+style (drawn from mijnxtra.be) is in, ahead of "restyled later".
 
 ### Phase 0b — Collect&Go access analysis (spike, in parallel)
 
@@ -162,49 +164,115 @@ known product to my Collect&Go basket from code.
 **Done when:** two of us are signed in to the same household and see the same
 profile.
 
+**Status (2026-10-22):** built and pushed to `tangible-aardvark-598`; checks
+green locally. A new "Household" tab shows the people we cook for, the dinner
+preferences (dinners per week, cooking time, budget, cuisines, less meat) and
+the members. How it works:
+
+- Each user is in exactly one household, set up on first sign-in.
+- An invite is a code for one email address, valid for 14 days. It is emailed
+  when the deployment has a Resend key; otherwise the app shares the code via
+  the share sheet. The invitee signs in with that address and enters the code
+  under Household → "Join a household", which leaves their own household (and
+  deletes it if nobody else is in it).
+- Deleting an account takes the user out of the household; the next member
+  becomes owner, or the household is deleted when it was the last one.
+
+Left: try it with two accounts on the phone.
+
 ### Phase 2 — Receipt import
 
-- Import script for the receipt CSV (columns to be confirmed when the example
-  arrives), filling `receipts`, `receiptLines`, `products`. The receipts have
+- Import script for the receipt CSV (columns confirmed, see the status below),
+  filling `receipts`, `receiptLines`, `products`. The receipts have
   both article numbers and names; the article number is the product key.
 - Compute `productStats`.
 - Simple "My products" screen: most-bought products, search.
 
 **Done when:** a year of receipts is in Convex and I can browse what I buy.
 
-### Phase 3 — Recipe sites and library
+**Status (2026-10-22):** built and pushed to `tangible-aardvark-598`; checks
+green locally. Left: run the import, and look at the Products tab.
 
-Recipes come from sites I choose, never from the LLM. The first site is
+The export (see `packages/backend/scripts/receiptCsv.ts`) is UTF-16,
+tab-separated, one row per article per receipt: date, receipt number, article
+number, name, amount paid (discounts included) and quantity, with decimal
+commas. Things learned from the example:
+
+- Articles sold by weight (names ending in "W", or a fractional quantity)
+  count in units of 100 g: "BH CHIPOLATA +-350GW" at 3,500 is 350 g. They are
+  stored in kg.
+- Zero rows ("PUBLIKAART") are loyalty-card scans and are skipped.
+- The receipt number starts with the date and the store number
+  ("20260326 3515 …"), which gives each receipt its store.
+- There is no category, brand or size column; those come later (names hold
+  the size, e.g. "250G").
+
+`products` holds Colruyt articles for every household; what a household
+bought is in its `receipts`, `receiptLines` and `productStats`. Import with
+`pnpm import:receipts <file.csv>`, which signs in with your app account.
+Importing again replaces receipts already there, so an overlapping export is
+safe.
+
+### Phase 3 — Recipes
+
+Recipes come from recipe sites, never from the LLM. The first site is
 **colruyt.be** (Colruyt's own recipes); its pages are what the parser is
-built and tested against. To check in this phase: whether Colruyt recipe
-pages link ingredients to Colruyt products, which would make Phase 5 much
-easier for those recipes.
+built and tested against. We don't collect whole sites: Phase 4 looks up the
+recipes that fit the week's plan, and the recipes we keep are the household's
+**saved recipes**.
 
-- Screen to add/remove recipe sites.
-- Add a single recipe by pasting or sharing its URL (share sheet from the
-  browser into the app).
-- A Convex action fetches the page and reads the recipe from its
-  schema.org `Recipe` JSON-LD (most recipe sites have it). Only if that is
-  missing, Claude extracts title, ingredients and steps from the page text.
-- Per site, collect recipes into the library from its sitemap or recipe
-  index, at a polite rate and only from sites whose terms allow it.
-- Library screen: list, search, recipe detail.
+- Read a recipe from its page: a Convex action fetches the page and reads the
+  recipe from its schema.org `Recipe` JSON-LD (most recipe sites have it).
+  Only if that is missing, Claude extracts title, ingredients and steps from
+  the page text.
+- Save a recipe by pasting its URL (sharing from the browser into the app
+  needs a development build, so later).
+- Recipes tab: an overview of the saved recipes, search, recipe detail.
 
-**Done when:** my library holds the colruyt.be recipes, and adding a recipe
-from another site by URL works.
+**Done when:** I can save a recipe from colruyt.be and from another site by
+its link, and see my saved recipes in the Recipes tab.
+
+**Status (2026-10-22):** built and pushed to `tangible-aardvark-598`; checks
+green locally; saving a colruyt.be recipe by link works from the deployment.
+Left: save a recipe from another site. (A first version collected all of
+colruyt.be's recipes up front; dropped in favour of looking them up per plan.)
+
+What colruyt.be offers:
+
+- `robots.txt` allows `/nl/recepten/` with `crawl-delay: 5`. Recipes are in
+  Dutch only, which suits matching them to the (Dutch) receipts.
+- `/nl/sitemap.recipes.xml` lists ~9,970 recipe pages, with descriptive
+  addresses (`/nl/recepten/gnocchi-met-aubergine-en-kip`).
+- Every page has schema.org `Recipe` JSON-LD (title, servings, total time when
+  known, course, keywords such as "Vegetarisch"/"Veganistisch", image, steps).
+- **Ingredients link to Colruyt's own ingredient ids**: the page's
+  `data-ingredient-data` gives each ingredient's quantity, unit, name and an
+  ingredient id, which the site uses for "product suggestions for this
+  recipe". The ids are stored with each ingredient (`sourceId`); Phase 0b
+  should look at the call behind those suggestions, which could map
+  ingredients to products for Phase 5 without guessing.
+- No product links in the page itself.
+
+Recipes are stored once for everyone (they are the sites' public content);
+`householdRecipes` holds each household's saved ones. Pages without recipe
+data are read by Claude Haiku 5.5 when the deployment has an
+`ANTHROPIC_API_KEY` (not set yet); Claude only copies what the page says.
 
 ### Phase 4 — Meal plan suggestions and picking
 
-- Convex action asks Claude to choose ~10 dinners for the week **from the
-  library**, using the profile (diet, allergies, time, budget) and lightly
-  the products I usually buy. Claude only returns recipe ids and a short
-  reason, so it cannot invent recipes and the call stays cheap.
-- If fewer recipes fit than requested (e.g. an allergy rules most of the
-  library out), the app shows fewer suggestions and says why; it never
-  generates a recipe.
+- Find ~10 dinners on colruyt.be that fit the week, using the profile (diet,
+  allergies, time, budget, cuisines) and lightly the products I usually buy.
+  How to find candidates without reading the whole site is decided at the
+  start of this phase: e.g. Claude picks likely dinners from the recipe
+  sitemap's descriptive addresses (~10,000 short names, cheap on Haiku), or
+  the site's own recipe search; then only those pages are read (one every 5
+  seconds) and checked against allergies, diet and time.
+- Recipes are always read from their page, never generated. If fewer recipes
+  fit than requested (e.g. an allergy rules most out), the app shows fewer
+  suggestions and says why.
 - Suggestion cards; tap to see ingredients and steps; "replace this one".
 - Select the recipes I want (e.g. 5 of 10), adjust servings; saved as this
-  week's plan, visible to every household member.
+  week's plan, visible to every household member. Picked recipes are saved.
 
 **Done when:** we have a confirmed weekly plan.
 
@@ -246,17 +314,17 @@ week.
 
 ## Decisions
 
-| Topic        | Decision                                                              |
-| ------------ | --------------------------------------------------------------------- |
-| Store        | Colruyt Collect&Go only                                               |
-| Receipt data | CSV with article numbers and names; example file to follow            |
-| Handoff      | Automatic; analysis first (Phase 0b), checklist only as fallback      |
-| C&G analysis | Done together, from your logged-in browser session                    |
-| Users        | Several household members, each with their own account                |
-| LLM          | Claude API, low cost (Haiku 5.5 by default)                           |
-| Recipes      | From recipe sites added in the app, never generated; colruyt.be first |
-| Language     | English                                                               |
-| Meals        | Dinners only                                                          |
-| Name         | "Personal Assistant", `@pa/*`, app id `app.personalassistant.shop`    |
-| Convex       | `tangible-aardvark-598` is empty; `npx convex dev` may push to it     |
-| Git          | New local repo, `main` + `develop`; no GitHub for now                 |
+| Topic        | Decision                                                                                                    |
+| ------------ | ----------------------------------------------------------------------------------------------------------- |
+| Store        | Colruyt Collect&Go only                                                                                     |
+| Receipt data | CSV with article numbers and names; example file to follow                                                  |
+| Handoff      | Automatic; analysis first (Phase 0b), checklist only as fallback                                            |
+| C&G analysis | Done together, from your logged-in browser session                                                          |
+| Users        | Several household members, each with their own account                                                      |
+| LLM          | Claude API, low cost (Haiku 5.5 by default)                                                                 |
+| Recipes      | From recipe sites (colruyt.be first), looked up per plan, never generated; saved recipes kept per household |
+| Language     | English                                                                                                     |
+| Meals        | Dinners only                                                                                                |
+| Name         | "Personal Assistant", `@pa/*`, app id `app.personalassistant.shop`                                          |
+| Convex       | `tangible-aardvark-598` is empty; `npx convex dev` may push to it                                           |
+| Git          | New local repo, `main` + `develop`; no GitHub for now                                                       |

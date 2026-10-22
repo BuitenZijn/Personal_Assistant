@@ -1,0 +1,16 @@
+{
+  /* The import scripts run on Node directly, which strips their types. */
+  "compilerOptions": {
+    "strict": true,
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "allowJs": true,
+    "skipLibCheck": true,
+    "types": ["node"],
+    "noEmit": true
+  },
+  "include": ["./*.ts"]
+}

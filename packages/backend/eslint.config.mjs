@@ -17,9 +17,12 @@ export default [
   },
   // Scripts are Node.js files
   {
-    files: ['scripts/**/*.mjs'],
+    files: ['scripts/**/*.{mjs,ts}'],
     languageOptions: {
       globals: globals.node,
+    },
+    rules: {
+      'turbo/no-undeclared-env-vars': 'off',
     },
   },
 ]

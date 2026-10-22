@@ -1,7 +1,6 @@
-import { styled, XStack, Text } from 'tamagui'
+import { styled, XStack, YStack, Text } from 'tamagui'
 import { Checkbox as TamaguiCheckbox } from 'tamagui'
 import { neutralColors, brandColors } from './colors'
-import { Check, Minus } from 'lucide-react'
 
 /**
  * Checkbox - A styled checkbox component for selection
@@ -57,6 +56,39 @@ const iconSizeMap = {
   md: 14,
   lg: 16,
 } as const
+
+/** Thickness of the drawn tick and dash. */
+const MARK_WIDTH = 2.5
+
+/**
+ * The tick, drawn as the bottom and right edges of a rotated box. Drawn with
+ * views, not an icon library: the web's icons (lucide-react) render HTML
+ * `<svg>` elements, which crash the native app.
+ */
+function CheckMark({ size }: { size: number }) {
+  return (
+    <YStack
+      width={size * 0.38}
+      height={size * 0.7}
+      marginTop={-size * 0.15}
+      borderRightWidth={MARK_WIDTH}
+      borderBottomWidth={MARK_WIDTH}
+      borderColor={neutralColors.text.onFill}
+      transform={[{ rotate: '45deg' }]}
+    />
+  )
+}
+
+function DashMark({ size }: { size: number }) {
+  return (
+    <YStack
+      width={size * 0.7}
+      height={MARK_WIDTH}
+      borderRadius={MARK_WIDTH / 2}
+      backgroundColor={neutralColors.text.onFill}
+    />
+  )
+}
 
 /**
  * CheckboxContainer - Wrapper for checkbox with optional label
@@ -145,17 +177,9 @@ export function Checkbox({
       >
         <TamaguiCheckbox.Indicator>
           {isIndeterminate ? (
-            <Minus
-              size={iconSize}
-              color={neutralColors.text.onFill}
-              strokeWidth={3}
-            />
+            <DashMark size={iconSize} />
           ) : (
-            <Check
-              size={iconSize}
-              color={neutralColors.text.onFill}
-              strokeWidth={3}
-            />
+            <CheckMark size={iconSize} />
           )}
         </TamaguiCheckbox.Indicator>
       </TamaguiCheckbox>

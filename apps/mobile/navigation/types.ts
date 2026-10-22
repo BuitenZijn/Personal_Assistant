@@ -22,6 +22,25 @@ export type HomeStackParamList = {
   Home: undefined
 }
 
+export type RecipesStackParamList = {
+  Recipes: undefined
+  Recipe: { recipeId: string }
+  AddRecipe: undefined
+}
+
+export type ProductsStackParamList = {
+  Products: undefined
+}
+
+export type HouseholdStackParamList = {
+  Household: undefined
+  /** Without `personId`, adds a person. */
+  Person: { personId?: string }
+  HouseholdSettings: undefined
+  Invite: undefined
+  JoinHousehold: undefined
+}
+
 export type SettingsStackParamList = {
   Settings: undefined
   EditName: undefined
@@ -34,6 +53,9 @@ export type SettingsStackParamList = {
 
 export type MainTabParamList = {
   HomeTab: NavigatorScreenParams<HomeStackParamList>
+  RecipesTab: NavigatorScreenParams<RecipesStackParamList>
+  ProductsTab: NavigatorScreenParams<ProductsStackParamList>
+  HouseholdTab: NavigatorScreenParams<HouseholdStackParamList>
   SettingsTab: NavigatorScreenParams<SettingsStackParamList>
 }
 
@@ -41,7 +63,11 @@ export type MainTabParamList = {
 // Screens use this so `navigate('AnyScreen')` type-checks even for cross-tab
 // navigation (React Navigation traverses the hierarchy at runtime).
 
-export type MainStackParamList = HomeStackParamList & SettingsStackParamList
+export type MainStackParamList = HomeStackParamList &
+  RecipesStackParamList &
+  ProductsStackParamList &
+  HouseholdStackParamList &
+  SettingsStackParamList
 
 /**
  * Root Stack - top level navigation

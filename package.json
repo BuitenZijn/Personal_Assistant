@@ -8,7 +8,8 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
-    "test": "turbo run test"
+    "test": "turbo run test",
+    "import:receipts": "node packages/backend/scripts/importReceipts.ts"
   },
   "devDependencies": {
     "prettier": "^3.9.6",

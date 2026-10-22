@@ -20,6 +20,43 @@ export const mobilePlatformValidator = v.union(
 
 export const roleValidator = v.union(v.literal('user'), v.literal('admin'))
 
+export const dietValidator = v.union(
+  v.literal('everything'),
+  v.literal('pescatarian'),
+  v.literal('vegetarian'),
+  v.literal('vegan'),
+)
+
+/** Someone the household cooks for. Not every one of them has an account. */
+export const householdPersonValidator = v.object({
+  /** Stable within the household, so two members can edit different people. */
+  id: v.string(),
+  name: v.string(),
+  age: v.optional(v.number()),
+  diet: dietValidator,
+  allergies: v.array(v.string()),
+  dislikes: v.array(v.string()),
+})
+
+/** One line of a recipe's ingredient list. */
+export const recipeIngredientValidator = v.object({
+  /** As the recipe writes it: "25 g borstfilets van braadkip (beenhouwerij)". */
+  text: v.string(),
+  quantity: v.optional(v.number()),
+  unit: v.optional(v.string()),
+  /** "borstfilets van braadkip" */
+  name: v.string(),
+  /** What follows in brackets: "beenhouwerij". */
+  note: v.optional(v.string()),
+  /** The site's own ingredient id, when it has one (colruyt.be does). */
+  sourceId: v.optional(v.string()),
+})
+
+export const householdRoleValidator = v.union(
+  v.literal('owner'),
+  v.literal('member'),
+)
+
 // ============================================================================
 // Schema
 // ============================================================================
@@ -95,4 +132,161 @@ export default defineSchema({
   })
     .index('by_storage_id', ['storageId'])
     .index('by_user', ['userId']),
+
+  // --------------------------------------------------------------------------
+  // Households (see docs/PLAN.md, Phase 1)
+  // --------------------------------------------------------------------------
+
+  /**
+   * The household profile every plan is made for. Each app user belongs to
+   * exactly one household (see lib/households.ts).
+   */
+  households: defineTable({
+    name: v.string(),
+    people: v.array(householdPersonValidator),
+    cookingMinutes: v.object({ weekday: v.number(), weekend: v.number() }),
+    /** Unset when the household gave no budget. */
+    budgetPerWeekCents: v.optional(v.number()),
+    dinnersPerWeek: v.number(),
+    cuisines: v.array(v.string()),
+    lessMeat: v.boolean(),
+    updatedAt: v.number(),
+  }),
+
+  householdMembers: defineTable({
+    householdId: v.id('households'),
+    userId: v.id('users'),
+    role: householdRoleValidator,
+    joinedAt: v.number(),
+  })
+    .index('by_user', ['userId'])
+    .index('by_household', ['householdId']),
+
+  /**
+   * An invitation to join a household. Joining takes the code and an account
+   * with the invited address; the invite is deleted once used.
+   */
+  householdInvites: defineTable({
+    householdId: v.id('households'),
+    /** Normalised (see `normalizeEmail`). */
+    email: v.string(),
+    code: v.string(),
+    expiresAt: v.number(),
+  })
+    .index('by_code', ['code'])
+    .index('by_household', ['householdId']),
+
+  // --------------------------------------------------------------------------
+  // Products and receipts (see docs/PLAN.md, Phase 2)
+  // --------------------------------------------------------------------------
+
+  /**
+   * One row per Colruyt article, shared by all households: the article
+   * number and name are the store's, not anyone's data. What a household
+   * bought lives in its receipts and `productStats`.
+   */
+  products: defineTable({
+    articleNumber: v.string(),
+    /** As printed on the receipt, e.g. "BONI GER. EM.LIGHT 250G". */
+    name: v.string(),
+    /** Sold per kg; its quantities are in kg. */
+    soldByWeight: v.boolean(),
+    collectAndGoId: v.optional(v.string()),
+    category: v.optional(v.string()),
+  }).index('by_article_number', ['articleNumber']),
+
+  receipts: defineTable({
+    householdId: v.id('households'),
+    /** The receipt's number in the export (KASTICKETNR_TS). */
+    ticketNumber: v.string(),
+    /** YYYY-MM-DD */
+    date: v.string(),
+    /** Colruyt store number, read from the ticket number. */
+    store: v.string(),
+    totalCents: v.number(),
+  })
+    .index('by_household_and_ticket', ['householdId', 'ticketNumber'])
+    .index('by_household_and_date', ['householdId', 'date']),
+
+  receiptLines: defineTable({
+    householdId: v.id('households'),
+    receiptId: v.id('receipts'),
+    productId: v.id('products'),
+    /** The receipt's date, so stats read a product's lines in order. */
+    date: v.string(),
+    /** Pieces, or kg for a product sold by weight. */
+    quantity: v.number(),
+    /** What was paid for the line, discounts included. */
+    amountCents: v.number(),
+  })
+    .index('by_receipt', ['receiptId'])
+    .index('by_household_and_product', ['householdId', 'productId', 'date']),
+
+  /**
+   * What a household buys of a product, derived from its receipt lines (see
+   * lib/productStats.ts). Rebuilt after every import.
+   */
+  productStats: defineTable({
+    householdId: v.id('households'),
+    productId: v.id('products'),
+    /** Copied from the product, for search and listing. */
+    name: v.string(),
+    soldByWeight: v.boolean(),
+    /** Days the product was bought on. */
+    timesBought: v.number(),
+    totalQuantity: v.number(),
+    totalSpentCents: v.number(),
+    firstBoughtOn: v.string(),
+    lastBoughtOn: v.string(),
+    /** Days between purchases, once bought on two days or more. */
+    averageIntervalDays: v.optional(v.number()),
+    averageQuantity: v.number(),
+    /** Per piece, or per kg. */
+    lastUnitPriceCents: v.optional(v.number()),
+  })
+    .index('by_household_and_product', ['householdId', 'productId'])
+    .index('by_household_and_times_bought', ['householdId', 'timesBought'])
+    .searchIndex('search_name', {
+      searchField: 'name',
+      filterFields: ['householdId'],
+    }),
+
+  // --------------------------------------------------------------------------
+  // Recipes (see docs/PLAN.md, Phase 3)
+  // --------------------------------------------------------------------------
+
+  /**
+   * A recipe read from a site's page, shared by all households: recipes are
+   * the site's public content. What a household keeps is in
+   * `householdRecipes`.
+   */
+  recipes: defineTable({
+    /** Canonical page address; one recipe per page. */
+    url: v.string(),
+    /** Without "www.", e.g. "colruyt.be". */
+    host: v.string(),
+    title: v.string(),
+    servings: v.optional(v.number()),
+    totalMinutes: v.optional(v.number()),
+    /** The site's own course label, e.g. "Hoofdgerecht". */
+    course: v.optional(v.string()),
+    /** A dinner: a main course, or a page that doesn't say. */
+    isMain: v.boolean(),
+    ingredients: v.array(recipeIngredientValidator),
+    steps: v.array(v.string()),
+    tags: v.array(v.string()),
+    imageUrl: v.optional(v.string()),
+    /** How it was read: the page's recipe data, or Claude from its text. */
+    extractedBy: v.union(v.literal('json-ld'), v.literal('claude')),
+    fetchedAt: v.number(),
+  }).index('by_url', ['url']),
+
+  /** A household's saved recipes. */
+  householdRecipes: defineTable({
+    householdId: v.id('households'),
+    recipeId: v.id('recipes'),
+    addedAt: v.number(),
+  })
+    .index('by_household', ['householdId', 'addedAt'])
+    .index('by_household_and_recipe', ['householdId', 'recipeId']),
 })

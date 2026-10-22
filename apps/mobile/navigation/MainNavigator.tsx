@@ -2,16 +2,29 @@ import React from 'react'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { getFocusedRouteNameFromRoute } from '@react-navigation/native'
 import type { RouteProp } from '@react-navigation/native'
-import { Home, Settings } from 'lucide-react-native'
+import {
+  ChefHat,
+  Home,
+  Settings,
+  ShoppingBag,
+  Users,
+} from 'lucide-react-native'
 import { YStack, brandColors, neutralColors, fontFaces } from '@pa/ui'
 import type { LucideIcon } from 'lucide-react-native'
 import type { MainTabParamList } from './types'
 import {
   HomeStack,
+  RecipesStack,
+  ProductsStack,
+  HouseholdStack,
   SettingsStack,
   homeFullScreenRoutes,
+  recipesFullScreenRoutes,
+  productsFullScreenRoutes,
+  householdFullScreenRoutes,
   settingsFullScreenRoutes,
 } from './tabs'
+import { useEnsureHousehold } from '../features/household'
 
 const Tab = createBottomTabNavigator<MainTabParamList>()
 
@@ -24,6 +37,9 @@ const Tab = createBottomTabNavigator<MainTabParamList>()
  */
 const TAB_BAR_HIDDEN_ROUTES = new Set<string>([
   ...homeFullScreenRoutes,
+  ...recipesFullScreenRoutes,
+  ...productsFullScreenRoutes,
+  ...householdFullScreenRoutes,
   ...settingsFullScreenRoutes,
 ])
 
@@ -69,6 +85,8 @@ function TabIcon({
 }
 
 export default function MainNavigator() {
+  useEnsureHousehold()
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -93,6 +111,49 @@ export default function MainNavigator() {
           tabBarLabel: 'Home',
           tabBarIcon: ({ color, size, focused }) => (
             <TabIcon Icon={Home} color={color} size={size} focused={focused} />
+          ),
+          tabBarStyle: getTabBarStyle(route),
+        })}
+      />
+      <Tab.Screen
+        name='RecipesTab'
+        component={RecipesStack}
+        options={({ route }) => ({
+          tabBarLabel: 'Recipes',
+          tabBarIcon: ({ color, size, focused }) => (
+            <TabIcon
+              Icon={ChefHat}
+              color={color}
+              size={size}
+              focused={focused}
+            />
+          ),
+          tabBarStyle: getTabBarStyle(route),
+        })}
+      />
+      <Tab.Screen
+        name='ProductsTab'
+        component={ProductsStack}
+        options={({ route }) => ({
+          tabBarLabel: 'Products',
+          tabBarIcon: ({ color, size, focused }) => (
+            <TabIcon
+              Icon={ShoppingBag}
+              color={color}
+              size={size}
+              focused={focused}
+            />
+          ),
+          tabBarStyle: getTabBarStyle(route),
+        })}
+      />
+      <Tab.Screen
+        name='HouseholdTab'
+        component={HouseholdStack}
+        options={({ route }) => ({
+          tabBarLabel: 'Household',
+          tabBarIcon: ({ color, size, focused }) => (
+            <TabIcon Icon={Users} color={color} size={size} focused={focused} />
           ),
           tabBarStyle: getTabBarStyle(route),
         })}

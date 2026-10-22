@@ -38,6 +38,7 @@ import {
   ROLE_PERMISSIONS,
 } from '../lib/permissions'
 import { claimStorage, deleteOwnedBlob } from '../lib/storageClaims'
+import { leaveHousehold } from '../lib/households'
 import { ResendOTP } from '../ResendOTP'
 import { ResendOTPPasswordReset } from '../ResendOTPPasswordReset'
 
@@ -654,6 +655,17 @@ async function deleteClaimedStorage(
 }
 
 /**
+ * The user's household membership, and the household itself when nobody else
+ * is left in it (see `leaveHousehold`).
+ */
+async function deleteHouseholdMembership(
+  ctx: MutationCtx,
+  userId: Id<'users'>,
+): Promise<number> {
+  return await leaveHousehold(ctx, userId)
+}
+
+/**
  * Delete the currently authenticated user's account and all associated data.
  *
  * This mutation only revokes auth state (every session dies immediately and
@@ -687,7 +699,10 @@ export const processAccountDeletion = internalMutation({
   handler: async (ctx, { userId }) => {
     // Each feature that stores rows per user adds its step here, before the
     // storage step (a feature's rows may reference claimed blobs).
-    const steps: DeletionStep[] = [deleteClaimedStorage]
+    const steps: DeletionStep[] = [
+      deleteHouseholdMembership,
+      deleteClaimedStorage,
+    ]
 
     let budget = DELETION_PASS_BUDGET
     for (const step of steps) {
