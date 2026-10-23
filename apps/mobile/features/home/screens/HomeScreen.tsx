@@ -68,7 +68,7 @@ function Screen({ children }: { children: React.ReactNode }) {
 
 function Progress({ plan, onRestart }: { plan: Plan; onRestart: () => void }) {
   const p = plan.progress
-  let text = 'Looking through colruyt.be’s recipes for dinners that suit you…'
+  let text = 'Looking through the recipe sites for dinners that suit you…'
   let value = 8
   if (p?.step === 'reading') {
     text = `Reading the recipes: ${p.done} of ${p.total}`
@@ -166,7 +166,7 @@ export function HomeScreen() {
         <EmptyState
           icon={<CalendarDays size={30} color={emptyStateIconColor} />}
           title='Plan your dinners'
-          description={`We suggest dinners from colruyt.be that suit your household, and you pick ${dinners(dinnersPerWeek)} for the week.`}
+          description={`We suggest dinners from your recipe sites that suit your household, and you pick ${dinners(dinnersPerWeek)} for the week.`}
           action={
             <Button variant='primary' onPress={startSuggesting}>
               <ButtonText variant='cta'>Suggest dinners</ButtonText>

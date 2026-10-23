@@ -45,6 +45,14 @@
           "microphonePermission": false
         }
       ]
-    ]
+    ],
+    "extra": {
+      "EXPO_PUBLIC_CONVEX_URL": "https://youthful-finch-562.eu-west-1.convex.cloud",
+      "SENTRY_ENVIRONMENT": "development",
+      "eas": {
+        "projectId": "1f3eb9ea-9418-4cda-a8a5-ba6496eafbd0"
+      }
+    },
+    "owner": "buitenzijn"
   }
 }

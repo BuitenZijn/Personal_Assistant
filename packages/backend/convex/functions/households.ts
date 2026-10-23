@@ -29,6 +29,7 @@ import {
   requireMyHousehold,
 } from '../lib/households'
 import { generateRandomString } from '../lib/random'
+import { CATALOG_SITES, householdSites } from '../lib/recipeCatalog'
 import { dietValidator } from '../schema'
 
 // ============================================================================
@@ -98,6 +99,19 @@ function requireWholeNumber(
   return value
 }
 
+/** Known site hosts, without repeats; at least one. */
+function requireRecipeSites(hosts: string[]): string[] {
+  const known = new Set(CATALOG_SITES.map(site => site.host))
+  const chosen = [...new Set(hosts)]
+  if (chosen.some(host => !known.has(host))) {
+    throw permanentError('INVALID_ARGUMENT', "We don't plan from that site.")
+  }
+  if (chosen.length === 0) {
+    throw permanentError('INVALID_ARGUMENT', 'Choose at least one site.')
+  }
+  return chosen
+}
+
 function requireEmailAddress(email: string): string {
   const normalized = normalizeEmail(email)
   if (
@@ -161,8 +175,15 @@ export const mine = query({
       .withIndex('by_household', q => q.eq('householdId', household._id))
       .collect()
 
+    const planningFrom = householdSites(household.recipeSites)
     return {
       household,
+      /** Every site we can plan from, and whether this household does. */
+      recipeSites: CATALOG_SITES.map(site => ({
+        host: site.host,
+        name: site.name,
+        selected: planningFrom.includes(site),
+      })),
       myRole: membership.role,
       members,
       invites: invites.map(i => ({
@@ -223,7 +244,8 @@ export const setUp = mutation({
 })
 
 /**
- * Change the household's name and dinner preferences. Omitted fields are left
+ * Change the household's name, dinner preferences and the recipe sites it
+ * plans from. Omitted fields are left
  * alone; `budgetPerWeekCents: null` removes the budget.
  */
 export const updateSettings = mutation({
@@ -236,6 +258,8 @@ export const updateSettings = mutation({
     dinnersPerWeek: v.optional(v.number()),
     cuisines: v.optional(v.array(v.string())),
     lessMeat: v.optional(v.boolean()),
+    /** Hosts of the recipe sites to plan from. */
+    recipeSites: v.optional(v.array(v.string())),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
@@ -286,6 +310,9 @@ export const updateSettings = mutation({
       updates.cuisines = cleanList(args.cuisines, 'cuisines')
     }
     if (args.lessMeat !== undefined) updates.lessMeat = args.lessMeat
+    if (args.recipeSites !== undefined) {
+      updates.recipeSites = requireRecipeSites(args.recipeSites)
+    }
 
     await ctx.db.patch(household._id, updates)
     return null

@@ -42,12 +42,17 @@ export type HouseholdStackParamList = {
   JoinHousehold: undefined
 }
 
+export type ShopStackParamList = {
+  Shop: undefined
+}
+
 export type SettingsStackParamList = {
   Settings: undefined
   EditName: undefined
   ChangePassword: undefined
   ProfilePicture: undefined
   AccountPrivacy: undefined
+  RecipeSites: undefined
 }
 
 // ─── Tab navigator ──────────────────────────────────────────────────────────
@@ -57,6 +62,8 @@ export type MainTabParamList = {
   RecipesTab: NavigatorScreenParams<RecipesStackParamList>
   ProductsTab: NavigatorScreenParams<ProductsStackParamList>
   HouseholdTab: NavigatorScreenParams<HouseholdStackParamList>
+  ShopTab: NavigatorScreenParams<ShopStackParamList>
+  /** Not in the tab bar: opened from the avatar in the header. */
   SettingsTab: NavigatorScreenParams<SettingsStackParamList>
 }
 
@@ -68,6 +75,7 @@ export type MainStackParamList = HomeStackParamList &
   RecipesStackParamList &
   ProductsStackParamList &
   HouseholdStackParamList &
+  ShopStackParamList &
   SettingsStackParamList
 
 /**

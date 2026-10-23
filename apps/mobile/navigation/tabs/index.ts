@@ -15,6 +15,7 @@ export {
   fullScreenRoutes as householdFullScreenRoutes,
 } from './HouseholdStack'
 export {
-  SettingsStack,
-  fullScreenRoutes as settingsFullScreenRoutes,
-} from './SettingsStack'
+  ShopStack,
+  fullScreenRoutes as shopFullScreenRoutes,
+} from './ShopStack'
+export { SettingsStack } from './SettingsStack'

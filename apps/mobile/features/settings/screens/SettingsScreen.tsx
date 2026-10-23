@@ -10,7 +10,6 @@ import {
   neutralColors,
 } from '@pa/ui'
 import { useNavigation } from '@react-navigation/native'
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs'
 import type { StackNavigationProp } from '@react-navigation/stack'
 import type { MainStackParamList } from '../../../navigation/types'
 import { useAuthActions } from '@convex-dev/auth/react'
@@ -22,6 +21,7 @@ import {
   Lock,
   Camera,
   UserRoundCog,
+  Globe,
 } from 'lucide-react-native'
 import type { LucideIcon } from 'lucide-react-native'
 import { AppShell } from '../../../components/shell'
@@ -56,12 +56,12 @@ function SettingsRow({
 }
 
 /**
- * SettingsScreen - profile, account and app information
+ * SettingsScreen - profile, account and app information. Opened from the
+ * avatar in the header; back returns to the tab it was opened from.
  */
 export function SettingsScreen() {
   const navigation = useNavigation<NavigationProp>()
   const { signOut } = useAuthActions()
-  const tabBarHeight = useBottomTabBarHeight()
 
   const appVersion = Application.nativeApplicationVersion ?? 'unknown'
   const buildNumber = Application.nativeBuildVersion ?? ''
@@ -78,8 +78,8 @@ export function SettingsScreen() {
   }
 
   return (
-    <AppShell title='Settings' showBack={false}>
-      <ScrollView contentContainerStyle={{ paddingBottom: tabBarHeight + 40 }}>
+    <AppShell title='Settings' showBack>
+      <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
         <YStack flex={1} padding='$4' gap='$4'>
           <YStack gap='$2'>
             <MicroLabel paddingHorizontal='$1'>Profile</MicroLabel>
@@ -97,6 +97,15 @@ export function SettingsScreen() {
               Icon={Camera}
               label='Profile picture'
               onPress={() => navigation.navigate('ProfilePicture')}
+            />
+          </YStack>
+
+          <YStack gap='$2'>
+            <MicroLabel paddingHorizontal='$1'>Meal planning</MicroLabel>
+            <SettingsRow
+              Icon={Globe}
+              label='Recipe sites'
+              onPress={() => navigation.navigate('RecipeSites')}
             />
           </YStack>
 

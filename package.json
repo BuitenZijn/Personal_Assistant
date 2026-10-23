@@ -6,6 +6,7 @@
     "dev:all": "turbo run dev --filter=@pa/backend --filter=@pa/mobile",
     "web": "pnpm --filter @pa/mobile web",
     "build:web": "pnpm --filter @pa/mobile build:web",
+    "deploy:web": "pnpm --filter @pa/mobile deploy:web",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,md}\"",

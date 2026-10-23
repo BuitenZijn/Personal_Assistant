@@ -9,23 +9,15 @@ import {
   ChangePasswordScreen,
   ProfilePictureScreen,
   AccountPrivacyScreen,
+  RecipeSitesScreen,
 } from '../../features/settings'
-
-/**
- * Routes in this stack that hide the bottom tab bar.
- *
- * Declared next to the screens themselves so adding a full-bleed screen
- * is a one-file change; MainNavigator aggregates these.
- */
-export const fullScreenRoutes = [
-  'EditName',
-  'ChangePassword',
-  'ProfilePicture',
-  'AccountPrivacy',
-] as const
 
 const Stack = createStackNavigator<SettingsStackParamList>()
 
+/**
+ * Settings, opened from the avatar in the header. It has no tab of its own,
+ * so the tab bar is hidden on all of its screens (see MainNavigator).
+ */
 export function SettingsStack() {
   return (
     <Stack.Navigator
@@ -37,6 +29,7 @@ export function SettingsStack() {
       <Stack.Screen name='ChangePassword' component={ChangePasswordScreen} />
       <Stack.Screen name='ProfilePicture' component={ProfilePictureScreen} />
       <Stack.Screen name='AccountPrivacy' component={AccountPrivacyScreen} />
+      <Stack.Screen name='RecipeSites' component={RecipeSitesScreen} />
     </Stack.Navigator>
   )
 }

@@ -57,6 +57,24 @@ const SITE: Record<string, string> = {
   [`${BASE}/stoofvlees`]: recipePage('Stoofvlees', 'Hoofdgerecht', 180),
 }
 
+const DK_BASE = 'https://dagelijksekost.vrt.be/gerechten'
+
+/** dagelijksekost.vrt.be as the tests see it: 2 recipes. */
+const DK_SITE: Record<string, string> = {
+  'https://dagelijksekost.vrt.be/robots.txt':
+    'User-agent:*\nAllow:/\nDisallow:/api/',
+  'https://dagelijksekost.vrt.be/api/sitemaps/recipes/0/sitemap.xml': `<urlset>${[
+    'balletjes-in-tomatensaus',
+    'witloof-in-de-oven-1',
+  ]
+    .map(slug => `<url><loc>${DK_BASE}/${slug}</loc></url>`)
+    .join('')}</urlset>`,
+  [`${DK_BASE}/balletjes-in-tomatensaus`]: recipePage(
+    'Balletjes in tomatensaus',
+  ),
+  [`${DK_BASE}/witloof-in-de-oven-1`]: recipePage('Witloof in de oven'),
+}
+
 describe('planning helpers', () => {
   it('plans this week until Thursday, next week from Friday (Belgian time)', () => {
     expect(planWeekStart(Date.parse('2026-10-19T10:00:00Z'))).toBe('2026-10-19')
@@ -110,11 +128,12 @@ describe('meal plans', () => {
     // A Thursday: plans are for the week of Monday 19 October.
     vi.setSystemTime(new Date('2026-10-22T10:00:00Z'))
     fetchMock.mockReset()
-    fetchMock.mockImplementation(async (url: string) =>
-      url in SITE
-        ? new Response(SITE[url], { status: 200 })
-        : new Response('not found', { status: 404 }),
-    )
+    fetchMock.mockImplementation(async (url: string) => {
+      const page = SITE[url] ?? DK_SITE[url]
+      return page === undefined
+        ? new Response('not found', { status: 404 })
+        : new Response(page, { status: 200 })
+    })
     vi.stubGlobal('fetch', fetchMock)
     claude.pickByName.mockReset()
     claude.chooseSuggestions.mockReset()
@@ -139,13 +158,20 @@ describe('meal plans', () => {
     vi.unstubAllGlobals()
   })
 
-  /** A household planning 1 dinner a week: 4 suggestions wanted. */
-  async function household() {
+  /**
+   * A household planning 1 dinner a week (4 suggestions wanted), from
+   * colruyt.be unless it says otherwise.
+   */
+  async function household(recipeSites = ['colruyt.be']) {
     const fixture = await userFixture()
     await fixture.authorClient.mutation(api.functions.households.setUp)
     await fixture.authorClient.mutation(
       api.functions.households.updateSettings,
-      { dinnersPerWeek: 1, cookingMinutes: { weekday: 30, weekend: 60 } },
+      {
+        dinnersPerWeek: 1,
+        cookingMinutes: { weekday: 30, weekend: 60 },
+        recipeSites,
+      },
     )
     return fixture
   }
@@ -313,6 +339,50 @@ describe('meal plans', () => {
     )
     expect(plan?.suggestions).toEqual([])
     expect(plan?.note).toMatch(/None of the recipes/)
+  })
+
+  it('plans only from the sites the household chose', async () => {
+    const fixture = await household(['dagelijksekost.vrt.be'])
+    await suggest(fixture)
+
+    const fetched = fetchMock.mock.calls.map(([url]) => url)
+    expect(fetched.some(u => u.includes('colruyt.be'))).toBe(false)
+    const [names] = claude.pickByName.mock.calls[0]!
+    expect(names).toEqual(['balletjes in tomatensaus', 'witloof in de oven'])
+    const plan = await fixture.authorClient.query(
+      api.functions.mealPlans.current,
+    )
+    expect(plan?.suggestions.map(s => s.title)).toEqual([
+      'Balletjes in tomatensaus',
+      'Witloof in de oven',
+    ])
+    const recipes = await fixture.t.run(ctx =>
+      ctx.db.query('recipes').collect(),
+    )
+    expect(recipes.map(r => r.host)).toEqual([
+      'dagelijksekost.vrt.be',
+      'dagelijksekost.vrt.be',
+    ])
+  })
+
+  it('plans from every site, even when one will not load', async () => {
+    const fixture = await userFixture()
+    await fixture.authorClient.mutation(api.functions.households.setUp)
+    fetchMock.mockImplementation(async (url: string) =>
+      url in DK_SITE
+        ? new Response('down', { status: 503 })
+        : url in SITE
+          ? new Response(SITE[url], { status: 200 })
+          : new Response('not found', { status: 404 }),
+    )
+    await suggest(fixture)
+
+    const [names] = claude.pickByName.mock.calls[0]!
+    expect(names).toContain('pasta pesto')
+    const plan = await fixture.authorClient.query(
+      api.functions.mealPlans.current,
+    )
+    expect(plan?.status).toBe('choosing')
   })
 
   it('runs one suggestion at a time', async () => {

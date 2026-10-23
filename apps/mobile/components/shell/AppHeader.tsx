@@ -3,6 +3,8 @@ import { TouchableOpacity } from 'react-native'
 import { RemoteImage } from '../kit'
 import { XStack, Text, Avatar, AvatarText, neutralColors } from '@pa/ui'
 import { useNavigation } from '@react-navigation/native'
+import type { NavigationProp } from '@react-navigation/native'
+import type { MainTabParamList } from '../../navigation/types'
 import { ChevronLeft } from 'lucide-react-native'
 import { useCurrentUser } from '../../lib/useCurrentUser'
 import { getInitials, truncateName } from '../../lib/formatters'
@@ -24,7 +26,7 @@ interface AppHeaderProps {
  * Right side: Optional action + user avatar (image or initials) + first name → taps to Settings.
  */
 export function AppHeader({ title, showBack, rightAction }: AppHeaderProps) {
-  const navigation = useNavigation()
+  const navigation = useNavigation<NavigationProp<MainTabParamList>>()
   const insets = useSafeAreaInsets()
   const canGoBack = showBack ?? navigation.canGoBack()
   const { displayName, imageUrl: avatarUrl } = useCurrentUser()
@@ -61,7 +63,9 @@ export function AppHeader({ title, showBack, rightAction }: AppHeaderProps) {
       <XStack alignItems='center' gap='$3'>
         {rightAction}
         <TouchableOpacity
-          onPress={() => navigation.navigate('SettingsTab' as never)}
+          onPress={() =>
+            navigation.navigate('SettingsTab', { screen: 'Settings' })
+          }
           activeOpacity={0.7}
           accessibilityRole='button'
           accessibilityLabel='Open settings'

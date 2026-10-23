@@ -5,25 +5,15 @@
  * numbers from the lists it is given, so it can't invent a recipe.
  */
 
-import Anthropic from '@anthropic-ai/sdk'
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
 import { z } from 'zod'
 import type { Doc } from '../_generated/dataModel'
+import { MODEL, claudeClient } from './claude'
 import { describeUsage } from './claudeCost'
 
-/** Cheap enough to run on every plan (see the plan's LLM decision). */
-const MODEL = 'claude-haiku-5-5'
+export { ClaudeUnavailableError as SuggestionsUnavailableError } from './claude'
 
-export class SuggestionsUnavailableError extends Error {}
-
-function client(): Anthropic {
-  if (!process.env.ANTHROPIC_API_KEY) {
-    throw new SuggestionsUnavailableError(
-      'Dinner suggestions need an Anthropic API key on the server (ANTHROPIC_API_KEY).',
-    )
-  }
-  return new Anthropic()
-}
+const client = () => claudeClient('Dinner suggestions')
 
 // ============================================================================
 // The household, in words
@@ -76,7 +66,7 @@ export function householdProfile(
 // Step 1: likely dinners by name
 // ============================================================================
 
-const PICK_INSTRUCTIONS = `You help a Belgian household plan its dinners from Colruyt's recipe collection. Recipe names are Dutch.
+const PICK_INSTRUCTIONS = `You help a Belgian household plan its dinners from Belgian recipe sites. Recipe names are Dutch.
 
 You get a numbered list of all recipe names, then the household. Pick recipes that are likely to be a good dinner (a main course) for this household:
 - Only main courses: no desserts, cakes, breakfasts, snacks, drinks, sauces, dips, soups, side dishes, baby or toddler food.
@@ -165,7 +155,7 @@ export async function pickByName(
 // Step 3: the dinners that suit them
 // ============================================================================
 
-const CHOOSE_INSTRUCTIONS = `You choose dinners for a Belgian household from recipes that were read from Colruyt's website. Recipes and ingredients are in Dutch.
+const CHOOSE_INSTRUCTIONS = `You choose dinners for a Belgian household from recipes that were read from Belgian recipe sites. Recipes and ingredients are in Dutch.
 
 A recipe can only be suggested if:
 - None of its ingredients contain anything a person is allergic to. Think about what Dutch ingredient names are made of (e.g. "pindakaas" contains peanuts, "pesto" usually nuts and cheese, "bloem" gluten).

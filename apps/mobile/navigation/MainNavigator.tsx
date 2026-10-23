@@ -5,8 +5,8 @@ import type { RouteProp } from '@react-navigation/native'
 import {
   ChefHat,
   CalendarDays,
-  Settings,
   ShoppingBag,
+  ShoppingCart,
   Users,
 } from 'lucide-react-native'
 import { YStack, brandColors, neutralColors, fontFaces } from '@pa/ui'
@@ -17,12 +17,13 @@ import {
   RecipesStack,
   ProductsStack,
   HouseholdStack,
+  ShopStack,
   SettingsStack,
   homeFullScreenRoutes,
   recipesFullScreenRoutes,
   productsFullScreenRoutes,
   householdFullScreenRoutes,
-  settingsFullScreenRoutes,
+  shopFullScreenRoutes,
 } from './tabs'
 import { useEnsureHousehold } from '../features/household'
 
@@ -40,7 +41,7 @@ const TAB_BAR_HIDDEN_ROUTES = new Set<string>([
   ...recipesFullScreenRoutes,
   ...productsFullScreenRoutes,
   ...householdFullScreenRoutes,
-  ...settingsFullScreenRoutes,
+  ...shopFullScreenRoutes,
 ])
 
 function getTabBarStyle(route: RouteProp<MainTabParamList>) {
@@ -89,6 +90,8 @@ export default function MainNavigator() {
 
   return (
     <Tab.Navigator
+      // Back from Settings returns to the tab it was opened from.
+      backBehavior='history'
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: brandColors.primary,
@@ -164,13 +167,13 @@ export default function MainNavigator() {
         })}
       />
       <Tab.Screen
-        name='SettingsTab'
-        component={SettingsStack}
+        name='ShopTab'
+        component={ShopStack}
         options={({ route }) => ({
-          tabBarLabel: 'Settings',
+          tabBarLabel: 'Shop',
           tabBarIcon: ({ color, size, focused }) => (
             <TabIcon
-              Icon={Settings}
+              Icon={ShoppingCart}
               color={color}
               size={size}
               focused={focused}
@@ -178,6 +181,16 @@ export default function MainNavigator() {
           ),
           tabBarStyle: getTabBarStyle(route),
         })}
+      />
+      {/* Settings opens from the avatar in the header, not the tab bar. */}
+      <Tab.Screen
+        name='SettingsTab'
+        component={SettingsStack}
+        options={{
+          tabBarButton: () => null,
+          tabBarItemStyle: { display: 'none' },
+          tabBarStyle: { display: 'none' },
+        }}
       />
     </Tab.Navigator>
   )

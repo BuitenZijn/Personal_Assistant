@@ -6,6 +6,7 @@
     "dev": "expo start --go",
     "web": "expo start --web",
     "build:web": "expo export --platform web --output-dir dist",
+    "deploy:web": "expo export --platform web --output-dir dist && npx -y eas-cli@latest deploy --prod",
     "lint": "eslint . --max-warnings 0",
     "check-types": "tsc --noEmit",
     "test": "jest"

@@ -101,6 +101,35 @@ describe('editing the profile', () => {
     expect(household?.dinnersPerWeek).toBe(4)
   })
 
+  it('chooses the recipe sites to plan from', async () => {
+    const { authorClient } = await userFixture()
+    await authorClient.mutation(api.functions.households.setUp)
+    const selected = async () =>
+      (await authorClient.query(api.functions.households.mine))?.recipeSites
+        .filter(s => s.selected)
+        .map(s => s.host)
+
+    // Every site until the household chooses.
+    expect(await selected()).toEqual(['colruyt.be', 'dagelijksekost.vrt.be'])
+    await authorClient.mutation(api.functions.households.updateSettings, {
+      recipeSites: ['dagelijksekost.vrt.be', 'dagelijksekost.vrt.be'],
+    })
+    expect(await selected()).toEqual(['dagelijksekost.vrt.be'])
+
+    await expectPermanentError(
+      authorClient.mutation(api.functions.households.updateSettings, {
+        recipeSites: [],
+      }),
+      'INVALID_ARGUMENT',
+    )
+    await expectPermanentError(
+      authorClient.mutation(api.functions.households.updateSettings, {
+        recipeSites: ['example.com'],
+      }),
+      'INVALID_ARGUMENT',
+    )
+  })
+
   it('refuses values out of range', async () => {
     const { authorClient } = await userFixture()
     await authorClient.mutation(api.functions.households.setUp)

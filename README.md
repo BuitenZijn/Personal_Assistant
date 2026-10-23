@@ -33,6 +33,7 @@ The Convex deployment's environment variables are listed in
 ```bash
 pnpm dev            # Convex
 pnpm dev:all        # Convex + mobile (Expo Go: scan the QR code)
+pnpm deploy:web     # build the website and publish it on EAS Hosting (*.expo.app)
 pnpm format:check && pnpm lint && pnpm check-types && pnpm test
 ```
 

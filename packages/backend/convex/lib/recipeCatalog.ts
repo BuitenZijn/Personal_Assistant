@@ -10,21 +10,52 @@ export type CatalogEntry = { url: string; name: string }
 
 export type CatalogSite = {
   host: string
+  /** As the app shows it. */
+  name: string
   robotsUrl: string
   sitemapUrl: string
   /** Which sitemap addresses are recipe pages. */
   recipePage: RegExp
 }
 
-/** For now the one site we plan from. */
 export const COLRUYT: CatalogSite = {
   host: 'colruyt.be',
+  name: 'Colruyt',
   robotsUrl: 'https://www.colruyt.be/robots.txt',
   sitemapUrl: 'https://www.colruyt.be/nl/sitemap.recipes.xml',
   recipePage: /^https:\/\/www\.colruyt\.be\/nl\/recepten\/[^/?#]+$/,
 }
 
-/** Seconds between page reads: colruyt.be's robots.txt asks for 5. */
+/**
+ * VRT's Dagelijkse kost: ~3,600 recipes. Its sitemap index (/sitemap.xml,
+ * which robots.txt names) lists this recipe sitemap; the pages have
+ * `Recipe` JSON-LD.
+ */
+export const DAGELIJKSE_KOST: CatalogSite = {
+  host: 'dagelijksekost.vrt.be',
+  name: 'Dagelijkse kost',
+  robotsUrl: 'https://dagelijksekost.vrt.be/robots.txt',
+  sitemapUrl:
+    'https://dagelijksekost.vrt.be/api/sitemaps/recipes/0/sitemap.xml',
+  recipePage: /^https:\/\/dagelijksekost\.vrt\.be\/gerechten\/[^/?#]+$/,
+}
+
+/** The sites a household can plan from. */
+export const CATALOG_SITES: CatalogSite[] = [COLRUYT, DAGELIJKSE_KOST]
+
+/**
+ * The sites a household plans from: the ones it chose, or all of them when
+ * it never chose (or chose only sites we no longer read).
+ */
+export function householdSites(chosen: string[] | undefined): CatalogSite[] {
+  const sites = CATALOG_SITES.filter(site => chosen?.includes(site.host))
+  return sites.length > 0 ? sites : CATALOG_SITES
+}
+
+/**
+ * Seconds between page reads: colruyt.be's robots.txt asks for 5; every
+ * site gets the same pace.
+ */
 export const READ_DELAY_SECONDS = 5
 
 /**

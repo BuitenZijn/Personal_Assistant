@@ -285,7 +285,7 @@ catalog of 9,971 colruyt.be recipes downloads and is cached.)
 
 How it works (the Home tab is now "Meal plan"):
 
-1. **Find** (`findCandidates`): the catalog is colruyt.be's recipe sitemap
+1. **Find** (`findCandidates`): each site's catalog is its recipe sitemap
    turned into names ("gnocchi met aubergine en kip"), cached as a file for a
    week. Names that are plainly not a dinner (desserts, soups, drinks,
    breakfast, snacks) are left out, and each run takes a random 3,500 of the
@@ -295,6 +295,12 @@ How it works (the Home tab is now "Meal plan"):
    for the household's profile: twice as many as the suggestions wanted,
    asked again for the rest when it returns too few. Recently picked and
    turned-down recipes are left out.
+   The sites are colruyt.be and dagelijksekost.vrt.be (~3,600 recipes);
+   a household picks which in Settings → Recipe sites (all of them until
+   it chooses). A site whose catalog won't load is skipped. Checked and
+   left out for now: 15gram.be has no `Recipe` JSON-LD (its ingredients sit
+   in a script, so it needs its own reader); libelle-lekker.be shows a
+   login page instead of the recipe.
 2. **Read** (`readCandidate`): those pages are read one every 5 seconds;
    recipes read in the last 30 days are reused. Only dinners count.
 3. **Choose** (`chooseSuggestionsStep`): recipes over the cooking time are
@@ -325,6 +331,24 @@ carries on with the app closed; one stuck for 10 minutes can be restarted.
 
 **Done when:** I see a shopping basket of real Collect&Go products for the
 week.
+
+**Status (2026-10-23):** a first version is built, without Collect&Go
+search (Phase 0b isn't done). Settings moved off the tab bar (the avatar
+opens it); its tab is now **Shop**:
+
+- "Make shopping list" turns this week's confirmed dinners into a list
+  (`functions/shoppingLists.ts`, table `shoppingLists`, one per household
+  and week). Ingredients are combined and scaled to servings, then Claude
+  Haiku matches them to the 600 products the household buys most, with the
+  number of packs (or kg). Basics (salt, oil, …) go to "Check you have";
+  ingredients with no match stay on the list as text. Building again
+  remakes the dinners' lines and keeps added products.
+- "You might be running out": products bought 3+ times whose usual
+  interval has (nearly) passed, most overdue first, to add with one tap in
+  the usual amount. No Claude call.
+- Lines: amount up/down, remove; an estimate from the last receipt prices.
+- "Order online": the webshop choice (Collect&Go, Delhaize, Albert Heijn)
+  and a disabled order button only; ordering is Phase 6.
 
 ### Phase 6 — Into Collect&Go
 

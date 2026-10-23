@@ -2,6 +2,8 @@ import React from 'react'
 import { Pressable } from 'react-native'
 import { XStack, Text, Avatar, AvatarText } from '@pa/ui'
 import { useNavigation } from '@react-navigation/native'
+import type { NavigationProp } from '@react-navigation/native'
+import type { MainTabParamList } from '../../navigation/types'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { RemoteImage } from '../kit'
 import { useCurrentUser } from '../../lib/useCurrentUser'
@@ -22,7 +24,7 @@ interface TabHeaderProps {
  * background with no divider — instead of the boxed AppHeader bar.
  */
 export function TabHeader({ title, rightAction }: TabHeaderProps) {
-  const navigation = useNavigation()
+  const navigation = useNavigation<NavigationProp<MainTabParamList>>()
   const insets = useSafeAreaInsets()
   const { displayName, imageUrl: avatarUrl } = useCurrentUser()
 
@@ -40,7 +42,9 @@ export function TabHeader({ title, rightAction }: TabHeaderProps) {
       <XStack alignItems='center' gap='$3'>
         {rightAction}
         <Pressable
-          onPress={() => navigation.navigate('SettingsTab' as never)}
+          onPress={() =>
+            navigation.navigate('SettingsTab', { screen: 'Settings' })
+          }
           accessibilityRole='button'
           accessibilityLabel='Open settings'
         >

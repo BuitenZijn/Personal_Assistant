@@ -52,6 +52,23 @@ export const recipeIngredientValidator = v.object({
   sourceId: v.optional(v.string()),
 })
 
+/** One line of a shopping list. */
+export const shoppingLineValidator = v.object({
+  /** Stable within the list. */
+  id: v.string(),
+  /** A product bought before; unset for an ingredient no product matched. */
+  productId: v.optional(v.id('products')),
+  /** The product's receipt name, or the ingredient's. */
+  name: v.string(),
+  /** Pieces, or kg for a product sold by weight; in `unit` without a product. */
+  quantity: v.optional(v.number()),
+  unit: v.optional(v.string()),
+  /** From the week's dinners, or added from the recommendations. */
+  reason: v.union(v.literal('recipe'), v.literal('recommended')),
+  /** For recipe lines: the ingredient lines it covers, with their recipe. */
+  covers: v.array(v.string()),
+})
+
 export const householdRoleValidator = v.union(
   v.literal('owner'),
   v.literal('member'),
@@ -150,6 +167,11 @@ export default defineSchema({
     dinnersPerWeek: v.number(),
     cuisines: v.array(v.string()),
     lessMeat: v.boolean(),
+    /**
+     * Hosts of the recipe sites to plan from (see `CATALOG_SITES` in
+     * lib/recipeCatalog.ts). Unset: all of them.
+     */
+    recipeSites: v.optional(v.array(v.string())),
     updatedAt: v.number(),
   }),
 
@@ -358,6 +380,36 @@ export default defineSchema({
     /** What this run's Claude calls cost so far, in US dollars. */
     claudeCostUsd: v.optional(v.number()),
     /** Bumped on every (re)start; steps from an older run stop themselves. */
+    runId: v.number(),
+    updatedAt: v.number(),
+  }).index('by_household_and_week', ['householdId', 'weekStart']),
+
+  // --------------------------------------------------------------------------
+  // Shopping lists (see docs/PLAN.md, Phase 5)
+  // --------------------------------------------------------------------------
+
+  /**
+   * What a household buys for a week: the week's dinners turned into
+   * products (see functions/shoppingLists.ts), plus recommended products
+   * it added.
+   */
+  shoppingLists: defineTable({
+    householdId: v.id('households'),
+    /** The Monday the week starts on, YYYY-MM-DD (Belgian time). */
+    weekStart: v.string(),
+    /** `building` while the dinners are turned into products. */
+    status: v.union(
+      v.literal('building'),
+      v.literal('ready'),
+      v.literal('failed'),
+    ),
+    lines: v.array(shoppingLineValidator),
+    /** Ingredients most kitchens have, to check before shopping. */
+    pantry: v.array(v.string()),
+    error: v.optional(v.string()),
+    /** What the last build's Claude call cost, in US dollars. */
+    claudeCostUsd: v.optional(v.number()),
+    /** Bumped on every build; a build from an older run stops itself. */
     runId: v.number(),
     updatedAt: v.number(),
   }).index('by_household_and_week', ['householdId', 'weekStart']),

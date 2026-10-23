@@ -4,8 +4,9 @@
  * Suggesting a week's dinners runs in three steps, each a scheduled action
  * that records its progress on the plan (so the app shows it live):
  *
- * 1. `findCandidates`: Claude picks likely dinners from the names of all of
- *    colruyt.be's recipes (the catalog, from its sitemap).
+ * 1. `findCandidates`: Claude picks likely dinners from the names of all
+ *    the recipes on the sites the household plans from (each site's
+ *    catalog, from its sitemap).
  * 2. `readCandidate`: those pages are read one at a time, every 5 seconds
  *    as the site asks; recipes read recently are reused.
  * 3. `chooseSuggestions`: Claude chooses, from the recipes read, the ones
@@ -31,12 +32,14 @@ import { permanentError } from '../lib/errors'
 import { getMembership, requireMyHousehold } from '../lib/households'
 import { planWeekStart } from '../lib/mealPlanWeek'
 import {
-  COLRUYT,
+  CATALOG_SITES,
   READ_DELAY_SECONDS,
   catalogFromSitemap,
   couldBeDinner,
+  householdSites,
   sampleEntries,
   type CatalogEntry,
+  type CatalogSite,
 } from '../lib/recipeCatalog'
 import {
   SuggestionsUnavailableError,
@@ -44,7 +47,7 @@ import {
   householdProfile,
   pickByName,
 } from '../lib/mealPlanClaude'
-import { extractRecipe } from '../lib/recipeParse'
+import { extractRecipe, normalizeHost } from '../lib/recipeParse'
 import { fetchText } from '../lib/recipeFetch'
 
 const CATALOG_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000
@@ -240,10 +243,15 @@ export const runContext = internalQuery({
       for (const s of recent.suggestions) if (s.picked) avoidIds.add(s.recipeId)
     }
     const avoid = await Promise.all([...avoidIds].map(id => ctx.db.get(id)))
-    const catalog = await ctx.db
-      .query('recipeCatalogs')
-      .withIndex('by_host', q => q.eq('host', COLRUYT.host))
-      .first()
+    const catalogs = await Promise.all(
+      householdSites(household.recipeSites).map(async site => ({
+        host: site.host,
+        catalog: await ctx.db
+          .query('recipeCatalogs')
+          .withIndex('by_host', q => q.eq('host', site.host))
+          .first(),
+      })),
+    )
 
     return {
       plan,
@@ -255,20 +263,20 @@ export const runContext = internalQuery({
       avoid: avoid
         .filter(r => r !== null)
         .map(r => ({ url: r.url, title: r.title })),
-      catalog,
+      catalogs,
     }
   },
 })
 
 export const saveCatalog = internalMutation({
-  args: { storageId: v.id('_storage'), count: v.number() },
+  args: { host: v.string(), storageId: v.id('_storage'), count: v.number() },
   returns: v.null(),
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query('recipeCatalogs')
-      .withIndex('by_host', q => q.eq('host', COLRUYT.host))
+      .withIndex('by_host', q => q.eq('host', args.host))
       .first()
-    const fields = { ...args, host: COLRUYT.host, refreshedAt: Date.now() }
+    const fields = { ...args, refreshedAt: Date.now() }
     if (existing) {
       await ctx.storage.delete(existing.storageId)
       await ctx.db.replace(existing._id, fields)
@@ -388,12 +396,13 @@ function failureMessage(error: unknown): string {
   return "We couldn't finish the suggestions. Check your connection and try again."
 }
 
-/** The catalog of colruyt.be's recipes, refreshed when a week old. */
+/** The catalog of a site's recipes, refreshed when a week old. */
 async function loadCatalog(
   ctx: {
     storage: { get: (id: Id<'_storage'>) => Promise<Blob | null> }
     store: (entries: CatalogEntry[]) => Promise<void>
   },
+  site: CatalogSite,
   catalog: Doc<'recipeCatalogs'> | null,
 ): Promise<CatalogEntry[]> {
   if (catalog && catalog.refreshedAt > Date.now() - CATALOG_MAX_AGE_MS) {
@@ -401,11 +410,13 @@ async function loadCatalog(
     if (blob) return JSON.parse(await blob.text()) as CatalogEntry[]
   }
   const [robots, sitemap] = await Promise.all([
-    fetchText(COLRUYT.robotsUrl),
-    fetchText(COLRUYT.sitemapUrl),
+    fetchText(site.robotsUrl),
+    fetchText(site.sitemapUrl),
   ])
-  const entries = catalogFromSitemap(COLRUYT, sitemap, robots)
-  if (entries.length === 0) throw new Error('The recipe sitemap was empty.')
+  const entries = catalogFromSitemap(site, sitemap, robots)
+  if (entries.length === 0) {
+    throw new Error(`The recipe sitemap of ${site.host} was empty.`)
+  }
   await ctx.store(entries)
   return entries
 }
@@ -421,21 +432,35 @@ export const findCandidates = internalAction({
     )
     if (!run) return null
     try {
-      const entries = await loadCatalog(
-        {
-          storage: ctx.storage,
-          store: async list => {
-            const storageId = await ctx.storage.store(
-              new Blob([JSON.stringify(list)], { type: 'application/json' }),
-            )
-            await ctx.runMutation(internal.functions.mealPlans.saveCatalog, {
-              storageId,
-              count: list.length,
-            })
-          },
-        },
-        run.catalog,
-      )
+      const entries: CatalogEntry[] = []
+      for (const { host, catalog } of run.catalogs) {
+        const site = CATALOG_SITES.find(s => s.host === host)!
+        try {
+          const list = await loadCatalog(
+            {
+              storage: ctx.storage,
+              store: async list => {
+                const storageId = await ctx.storage.store(
+                  new Blob([JSON.stringify(list)], {
+                    type: 'application/json',
+                  }),
+                )
+                await ctx.runMutation(
+                  internal.functions.mealPlans.saveCatalog,
+                  { host, storageId, count: list.length },
+                )
+              },
+            },
+            site,
+            catalog,
+          )
+          entries.push(...list)
+        } catch (error) {
+          // One site that won't load doesn't stop the others.
+          console.warn(`Couldn't load the catalog of ${host}:`, error)
+        }
+      }
+      if (entries.length === 0) throw new Error('No recipe catalog loaded.')
       const avoidUrls = new Set(run.avoid.map(a => a.url))
       const open = sampleEntries(
         entries.filter(e => !avoidUrls.has(e.url) && couldBeDinner(e.name)),
@@ -512,7 +537,7 @@ export const readCandidate = internalAction({
         if (recipe) {
           const id: Id<'recipes'> = await ctx.runMutation(
             internal.functions.recipes.saveRecipe,
-            { url, host: COLRUYT.host, recipe, extractedBy: 'json-ld' },
+            { url, host: normalizeHost(url)!, recipe, extractedBy: 'json-ld' },
           )
           recipeId = recipe.isMain ? id : undefined
         }
