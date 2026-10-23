@@ -1,6 +1,6 @@
 # Personal Shopping Assistant — Plan
 
-Status: **draft v3**, all open questions answered. Phases 0 to 3 are
+Status: **draft v3**, all open questions answered. Phases 0 to 4 are
 built; see each phase's status line.
 
 ## Goal
@@ -47,9 +47,9 @@ personal data stays in the EU). Empty, so `npx convex dev` can push the schema
 and functions. Set in `.env` as `CONVEX_DEPLOYMENT` / `CONVEX_URL`, the same
 way Ella does.
 
-Git: a new local repo with `main` + `develop`, work on `develop`, same as
-Ella. No GitHub remote for now, so `pr-checks.yml` is kept but does not run;
-the same checks (prettier, lint, types, tests) run locally.
+Git: `main` + `develop`, work on `develop`, same as Ella. Remote:
+https://github.com/BuitenZijn/Personal_Assistant; `pr-checks.yml` runs
+prettier, lint, types and tests on pull requests.
 
 ## Architecture
 
@@ -91,7 +91,7 @@ Convex backend (tangible-aardvark-598, eu-west-1)
 | `receipts`              | date, store, total                                                                                                                                                                  |
 | `receiptLines`          | receipt → product, quantity, price, discount                                                                                                                                        |
 | `productStats`          | derived per product: times bought, last bought, average interval, average quantity (feeds "you usually buy this every 2 weeks")                                                     |
-| `mealPlans`             | household, week, suggested recipes, which ones were picked, servings per recipe, status                                                                                             |
+| `mealPlans`             | household, week (Monday), status, suggestions (recipe, reason, picked, servings), spares, turned-down recipes, progress while suggesting                                            |
 | `baskets`               | meal plan → lines (product, quantity, reason: `recipe` / `recurring` / `manual`), status, Collect&Go sync status per line                                                           |
 
 All tables with household data are scoped by `householdId`, and every query
@@ -276,6 +276,34 @@ data are read by Claude Haiku 5.5 when the deployment has an
 
 **Done when:** we have a confirmed weekly plan.
 
+**Status (2026-10-22):** built and pushed to `tangible-aardvark-598`; checks
+green locally. Left: set `ANTHROPIC_API_KEY` on the deployment, then plan a
+week on the phone. (Tested on the deployment up to the Claude step: the
+catalog of 9,971 colruyt.be recipes downloads and is cached.)
+
+How it works (the Home tab is now "Dinners"):
+
+1. **Find** (`findCandidates`): the catalog is colruyt.be's recipe sitemap
+   turned into names ("gnocchi met aubergine en kip"), cached as a file for a
+   week. Claude Haiku 5.5 picks likely dinners by number from the full list
+   (cached in the prompt for an hour) for the household's profile: twice as
+   many as the suggestions wanted. Recently picked and turned-down recipes
+   are left out.
+2. **Read** (`readCandidate`): those pages are read one every 5 seconds;
+   recipes read in the last 30 days are reused. Only dinners count.
+3. **Choose** (`chooseSuggestionsStep`): recipes over the cooking time are
+   dropped, then Claude chooses the ones that suit everyone (allergies in
+   Dutch ingredient names, diets, time, preferences) with a one-line reason.
+   The first `2 × dinners per week` (at most 14) are suggestions; the rest
+   are spares for "Replace". Fewer than wanted comes with a note saying why.
+
+The household then picks dinners (tap a card), sets servings (default: the
+number of people), replaces suggestions and confirms; confirmed recipes are
+saved. A plan is for the week starting Monday: this week until Thursday,
+next week from Friday (Belgian time). "Plan again" sets the current
+suggestions aside as turned down. A suggestion run takes a few minutes and
+carries on with the app closed; one stuck for 10 minutes can be restarted.
+
 ### Phase 5 — Productise into a basket
 
 - Combine ingredients across the picked recipes (2 × 200 g minced meat → 400 g).
@@ -327,4 +355,4 @@ week.
 | Meals        | Dinners only                                                                                                |
 | Name         | "Personal Assistant", `@pa/*`, app id `app.personalassistant.shop`                                          |
 | Convex       | `tangible-aardvark-598` is empty; `npx convex dev` may push to it                                           |
-| Git          | New local repo, `main` + `develop`; no GitHub for now                                                       |
+| Git          | `main` + `develop` on GitHub (BuitenZijn/Personal_Assistant)                                                |

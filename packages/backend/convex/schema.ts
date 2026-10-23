@@ -289,4 +289,72 @@ export default defineSchema({
   })
     .index('by_household', ['householdId', 'addedAt'])
     .index('by_household_and_recipe', ['householdId', 'recipeId']),
+
+  // --------------------------------------------------------------------------
+  // Meal plans (see docs/PLAN.md, Phase 4)
+  // --------------------------------------------------------------------------
+
+  /**
+   * The names and addresses of all of a site's recipes, from its sitemap,
+   * stored as a JSON file (~10,000 entries for colruyt.be) and refreshed
+   * weekly. Suggestions pick candidates from it before reading any page.
+   */
+  recipeCatalogs: defineTable({
+    host: v.string(),
+    storageId: v.id('_storage'),
+    count: v.number(),
+    refreshedAt: v.number(),
+  }).index('by_host', ['host']),
+
+  /**
+   * A household's dinners for a week: suggested (in three steps, see
+   * functions/mealPlans.ts), then picked and confirmed.
+   */
+  mealPlans: defineTable({
+    householdId: v.id('households'),
+    /** The Monday the week starts on, YYYY-MM-DD (Belgian time). */
+    weekStart: v.string(),
+    status: v.union(
+      v.literal('suggesting'),
+      v.literal('choosing'),
+      v.literal('confirmed'),
+      v.literal('failed'),
+    ),
+    /** While suggesting: which step, and how far. */
+    progress: v.optional(
+      v.object({
+        step: v.union(
+          v.literal('finding'),
+          v.literal('reading'),
+          v.literal('choosing'),
+        ),
+        done: v.number(),
+        total: v.number(),
+      }),
+    ),
+    /** Recipe pages picked by name, to read and check. */
+    candidates: v.array(v.string()),
+    /** Candidates read so far that are dinners. */
+    readRecipeIds: v.array(v.id('recipes')),
+    suggestions: v.array(
+      v.object({
+        recipeId: v.id('recipes'),
+        reason: v.string(),
+        picked: v.boolean(),
+        servings: v.number(),
+      }),
+    ),
+    /** Fitting recipes held back to replace a suggestion. */
+    spares: v.array(
+      v.object({ recipeId: v.id('recipes'), reason: v.string() }),
+    ),
+    /** Replaced suggestions, not suggested again this week. */
+    rejected: v.array(v.id('recipes')),
+    /** Why there are fewer suggestions than asked for. */
+    note: v.optional(v.string()),
+    error: v.optional(v.string()),
+    /** Bumped on every (re)start; steps from an older run stop themselves. */
+    runId: v.number(),
+    updatedAt: v.number(),
+  }).index('by_household_and_week', ['householdId', 'weekStart']),
 })

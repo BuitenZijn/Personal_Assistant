@@ -20,6 +20,7 @@ export type AuthStackParamList = {
 
 export type HomeStackParamList = {
   Home: undefined
+  Recipe: { recipeId: string }
 }
 
 export type RecipesStackParamList = {

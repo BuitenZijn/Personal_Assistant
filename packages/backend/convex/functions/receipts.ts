@@ -286,8 +286,8 @@ export const myProducts = query({
 // ============================================================================
 
 /**
- * Delete a deleted household's receipts, lines, stats and saved
- * recipes, a batch per pass
+ * Delete a deleted household's receipts, lines, stats, saved
+ * recipes and meal plans, a batch per pass
  * (a year of receipts is more than one transaction may delete).
  */
 export const deleteHouseholdData = internalMutation({
@@ -321,6 +321,16 @@ export const deleteHouseholdData = internalMutation({
         .take(budget)
       for (const row of saved) await ctx.db.delete(row._id)
       budget -= saved.length
+    }
+    if (budget > 0) {
+      const plans = await ctx.db
+        .query('mealPlans')
+        .withIndex('by_household_and_week', q =>
+          q.eq('householdId', householdId),
+        )
+        .take(budget)
+      for (const row of plans) await ctx.db.delete(row._id)
+      budget -= plans.length
     }
     if (budget > 0) {
       const stats = await ctx.db

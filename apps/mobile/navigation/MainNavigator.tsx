@@ -4,7 +4,7 @@ import { getFocusedRouteNameFromRoute } from '@react-navigation/native'
 import type { RouteProp } from '@react-navigation/native'
 import {
   ChefHat,
-  Home,
+  CalendarDays,
   Settings,
   ShoppingBag,
   Users,
@@ -108,9 +108,14 @@ export default function MainNavigator() {
         name='HomeTab'
         component={HomeStack}
         options={({ route }) => ({
-          tabBarLabel: 'Home',
+          tabBarLabel: 'Dinners',
           tabBarIcon: ({ color, size, focused }) => (
-            <TabIcon Icon={Home} color={color} size={size} focused={focused} />
+            <TabIcon
+              Icon={CalendarDays}
+              color={color}
+              size={size}
+              focused={focused}
+            />
           ),
           tabBarStyle: getTabBarStyle(route),
         })}

@@ -4,6 +4,7 @@ import { defaultScreenOptions } from '../screenOptions'
 import { screenBoundaryLayout } from '../../components/ScreenBoundary'
 import type { HomeStackParamList } from '../types'
 import { HomeScreen } from '../../features/home'
+import { RecipeScreen } from '../../features/recipes'
 
 /**
  * Routes in this stack that hide the bottom tab bar.
@@ -11,7 +12,7 @@ import { HomeScreen } from '../../features/home'
  * Declared next to the screens themselves so adding a full-bleed screen
  * is a one-file change; MainNavigator aggregates these.
  */
-export const fullScreenRoutes = [] as const
+export const fullScreenRoutes = ['Recipe'] as const
 
 const Stack = createStackNavigator<HomeStackParamList>()
 
@@ -22,6 +23,7 @@ export function HomeStack() {
       screenLayout={screenBoundaryLayout('Home')}
     >
       <Stack.Screen name='Home' component={HomeScreen} />
+      <Stack.Screen name='Recipe' component={RecipeScreen} />
     </Stack.Navigator>
   )
 }
