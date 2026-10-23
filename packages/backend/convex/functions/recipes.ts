@@ -20,6 +20,7 @@ import { v } from 'convex/values'
 import { getCurrentUserOrNull } from '../lib/auth'
 import { permanentError } from '../lib/errors'
 import { getMembership, requireMyHousehold } from '../lib/households'
+import { planWeekStart } from '../lib/mealPlanWeek'
 import {
   canonicalUrl,
   extractRecipe,
@@ -57,28 +58,54 @@ async function myHouseholdId(ctx: QueryCtx): Promise<Id<'households'> | null> {
 // Saved recipes
 // ============================================================================
 
-/** The household's saved recipes, newest first, as a list shows them. */
+/**
+ * The household's saved recipes, newest first, as a list shows them: the
+ * ones picked in this week's plan, then the other favourites, then the rest.
+ */
 export const saved = query({
   args: {},
   handler: async ctx => {
     const householdId = await myHouseholdId(ctx)
-    if (!householdId) return []
+    if (!householdId) return { thisWeek: [], favourites: [], other: [] }
     const links = await ctx.db
       .query('householdRecipes')
       .withIndex('by_household', q => q.eq('householdId', householdId))
       .order('desc')
       .take(SAVED_LIMIT)
-    const recipes = await Promise.all(links.map(l => ctx.db.get(l.recipeId)))
-    return recipes
-      .filter(r => r !== null)
-      .map(recipe => ({
-        _id: recipe._id,
-        title: recipe.title,
-        host: recipe.host,
-        imageUrl: recipe.imageUrl ?? null,
-        totalMinutes: recipe.totalMinutes ?? null,
-        servings: recipe.servings ?? null,
-      }))
+    const plan = await ctx.db
+      .query('mealPlans')
+      .withIndex('by_household_and_week', q =>
+        q
+          .eq('householdId', householdId)
+          .eq('weekStart', planWeekStart(Date.now())),
+      )
+      .first()
+    const pickedThisWeek = new Set(
+      (plan?.suggestions ?? []).filter(s => s.picked).map(s => s.recipeId),
+    )
+    const rows = await Promise.all(
+      links.map(async link => {
+        const recipe = await ctx.db.get(link.recipeId)
+        return recipe
+          ? {
+              _id: recipe._id,
+              title: recipe.title,
+              host: recipe.host,
+              imageUrl: recipe.imageUrl ?? null,
+              totalMinutes: recipe.totalMinutes ?? null,
+              servings: recipe.servings ?? null,
+              favourite: link.favourite ?? false,
+            }
+          : null
+      }),
+    )
+    const recipes = rows.filter(r => r !== null)
+    const rest = recipes.filter(r => !pickedThisWeek.has(r._id))
+    return {
+      thisWeek: recipes.filter(r => pickedThisWeek.has(r._id)),
+      favourites: rest.filter(r => r.favourite),
+      other: rest.filter(r => !r.favourite),
+    }
   },
 })
 
@@ -111,6 +138,30 @@ export const removeSaved = mutation({
       )
       .collect()
     for (const link of links) await ctx.db.delete(link._id)
+    return null
+  },
+})
+
+/**
+ * Mark a saved recipe as a favourite, or not.
+ *
+ * @throws NOT_FOUND when the recipe isn't saved
+ */
+export const setFavourite = mutation({
+  args: { recipeId: v.id('recipes'), favourite: v.boolean() },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const { household } = await requireMyHousehold(ctx)
+    const link = await ctx.db
+      .query('householdRecipes')
+      .withIndex('by_household_and_recipe', q =>
+        q.eq('householdId', household._id).eq('recipeId', args.recipeId),
+      )
+      .first()
+    if (!link) {
+      throw permanentError('NOT_FOUND', 'This recipe is no longer saved.')
+    }
+    await ctx.db.patch(link._id, { favourite: args.favourite })
     return null
   },
 })

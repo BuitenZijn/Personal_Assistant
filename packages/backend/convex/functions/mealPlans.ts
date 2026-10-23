@@ -34,6 +34,8 @@ import {
   COLRUYT,
   READ_DELAY_SECONDS,
   catalogFromSitemap,
+  couldBeDinner,
+  sampleEntries,
   type CatalogEntry,
 } from '../lib/recipeCatalog'
 import {
@@ -53,6 +55,12 @@ const STALLED_AFTER_MS = 10 * 60 * 1000
 const MAX_SERVINGS = 20
 /** Products named as a hint of what they like. */
 const USUALLY_BOUGHT = 25
+/**
+ * Recipe names Claude picks from in one run, chosen at random from the
+ * catalog. About 20 tokens each: this keeps the prompt well under the 100K
+ * tokens above which Claude Haiku 5.5 costs five times as much.
+ */
+const NAMES_PER_RUN = 3500
 
 /** Suggestions for a week: twice the dinners, to pick from. */
 export function suggestionsWanted(dinnersPerWeek: number): number {
@@ -119,6 +127,7 @@ export const current = query({
       sparesLeft: plan.spares.length,
       note: plan.note ?? null,
       error: plan.error ?? null,
+      claudeCostUsd: plan.claudeCostUsd ?? null,
       updatedAt: plan.updatedAt,
     }
   },
@@ -155,6 +164,7 @@ export const suggest = mutation({
       spares: [],
       note: undefined,
       error: undefined,
+      claudeCostUsd: 0,
       updatedAt: now,
     }
     let planId: Id<'mealPlans'>
@@ -265,6 +275,20 @@ export const saveCatalog = internalMutation({
     } else {
       await ctx.db.insert('recipeCatalogs', fields)
     }
+    return null
+  },
+})
+
+/** Add a Claude call's cost to the run's total. */
+export const addClaudeCost = internalMutation({
+  args: { ...runArgs, costUsd: v.number() },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const plan = await activeRun(ctx, args)
+    if (!plan) return null
+    await ctx.db.patch(plan._id, {
+      claudeCostUsd: (plan.claudeCostUsd ?? 0) + args.costUsd,
+    })
     return null
   },
 })
@@ -413,13 +437,21 @@ export const findCandidates = internalAction({
         run.catalog,
       )
       const avoidUrls = new Set(run.avoid.map(a => a.url))
-      const open = entries.filter(e => !avoidUrls.has(e.url))
-      const picked = await pickByName(
+      const open = sampleEntries(
+        entries.filter(e => !avoidUrls.has(e.url) && couldBeDinner(e.name)),
+        NAMES_PER_RUN,
+        `${args.planId}:${args.runId}`,
+      )
+      const { picks: picked, costUsd } = await pickByName(
         open.map(e => e.name),
         run.profile,
         run.avoid.map(a => a.title),
         candidatesWanted(run.household.dinnersPerWeek),
       )
+      await ctx.runMutation(internal.functions.mealPlans.addClaudeCost, {
+        ...args,
+        costUsd,
+      })
       if (picked.length === 0) {
         throw new Error('No candidates picked.')
       }
@@ -557,6 +589,10 @@ export const chooseSuggestionsStep = internalAction({
           run.profile,
           wanted,
         )
+        await ctx.runMutation(internal.functions.mealPlans.addClaudeCost, {
+          ...args,
+          costUsd: result.costUsd,
+        })
         chosen = result.chosen.map(c => ({
           recipeId: fitting[c.index]!._id,
           reason: c.reason,

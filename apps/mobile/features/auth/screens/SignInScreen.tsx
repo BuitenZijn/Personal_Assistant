@@ -225,7 +225,7 @@ export function SignInScreen({ navigation }: Props) {
             </Button>
 
             <Text size='$2' variant='subtle' textAlign='center' paddingTop='$2'>
-              Sign in to continue on this phone
+              Sign in to plan your dinners together
             </Text>
           </YStack>
         </YStack>

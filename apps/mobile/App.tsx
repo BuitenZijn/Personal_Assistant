@@ -26,6 +26,7 @@ import AuthNavigator from './navigation/AuthNavigator'
 import MainNavigator from './navigation/MainNavigator'
 import { MinimumVersionGate } from './features/app-update'
 import { ScreenBoundary } from './components/ScreenBoundary'
+import { WebFrame } from './components/shell'
 import { logger } from './lib/logger'
 import {
   parsePasswordResetLink,
@@ -202,9 +203,11 @@ function App() {
                   catches throws in the gates above them. Inside
                   ConvexProvider so "Try again" keeps the client and auth. */}
               <ScreenBoundary name='App'>
-                <MinimumVersionGate>
-                  <AppContent />
-                </MinimumVersionGate>
+                <WebFrame>
+                  <MinimumVersionGate>
+                    <AppContent />
+                  </MinimumVersionGate>
+                </WebFrame>
               </ScreenBoundary>
             </ConvexProvider>
           </ToastProvider>

@@ -119,9 +119,10 @@ describe('meal plans', () => {
     claude.pickByName.mockReset()
     claude.chooseSuggestions.mockReset()
     // Claude picks every name it is given, and finds every recipe suits.
-    claude.pickByName.mockImplementation(async (names: string[]) =>
-      names.map((_, i) => i),
-    )
+    claude.pickByName.mockImplementation(async (names: string[]) => ({
+      picks: names.map((_, i) => i),
+      costUsd: 0.012,
+    }))
     claude.chooseSuggestions.mockImplementation(
       async (recipes: { title: string }[]) => ({
         chosen: recipes.map((r, index) => ({
@@ -129,6 +130,7 @@ describe('meal plans', () => {
           reason: `${r.title} suits you.`,
         })),
         note: null,
+        costUsd: 0.003,
       }),
     )
   })
@@ -172,6 +174,8 @@ describe('meal plans', () => {
       sparesLeft: 0,
       note: 'Only 3 of the recipes we found suit everyone.',
     })
+    // Both Claude calls are counted.
+    expect(plan?.claudeCostUsd).toBeCloseTo(0.015)
     expect(plan?.suggestions).toEqual([
       expect.objectContaining({
         title: 'Pasta pesto',
@@ -182,10 +186,12 @@ describe('meal plans', () => {
       expect.objectContaining({ title: 'Kip curry' }),
       expect.objectContaining({ title: 'Vispannetje' }),
     ])
-    // Only the candidates were read, robots.txt was followed.
+    // Only the candidates were read, robots.txt was followed, and the
+    // tiramisu was left out by its name, before reading.
     const fetched = fetchMock.mock.calls.map(([url]) => url)
     expect(fetched).not.toContain(`${BASE}/verboden`)
-    expect(fetched.filter(u => u.startsWith(`${BASE}/`))).toHaveLength(6)
+    expect(fetched).not.toContain(`${BASE}/tiramisu`)
+    expect(fetched.filter(u => u.startsWith(`${BASE}/`))).toHaveLength(5)
     // Claude only saw dinners within the cooking time.
     const [given] = claude.chooseSuggestions.mock.calls[0]!
     expect(given.map((r: { title: string }) => r.title)).toEqual([
@@ -203,6 +209,7 @@ describe('meal plans', () => {
       async (recipes: { title: string }[]) => ({
         chosen: recipes.map((r, index) => ({ index, reason: r.title })),
         note: null,
+        costUsd: 0,
       }),
     )
     await authorClient.mutation(api.functions.households.updateSettings, {
@@ -258,9 +265,18 @@ describe('meal plans', () => {
     await authorClient.mutation(api.functions.mealPlans.confirm, { planId })
     plan = await authorClient.query(api.functions.mealPlans.current)
     expect(plan?.status).toBe('confirmed')
-    expect(
-      (await authorClient.query(api.functions.recipes.saved)).map(r => r.title),
-    ).toEqual(['Pasta pesto'])
+    // Picked this week: with this week's recipes.
+    const saved = await authorClient.query(api.functions.recipes.saved)
+    expect(saved.thisWeek.map(r => r.title)).toEqual(['Pasta pesto'])
+    expect(saved.other).toEqual([])
+    // A favourite picked this week stays with this week's dinners.
+    await authorClient.mutation(api.functions.recipes.setFavourite, {
+      recipeId: saved.thisWeek[0]!._id,
+      favourite: true,
+    })
+    const again = await authorClient.query(api.functions.recipes.saved)
+    expect(again.thisWeek.map(r => r.title)).toEqual(['Pasta pesto'])
+    expect(again.favourites).toEqual([])
 
     // Every member sees the plan, and can change it again.
     await authorClient.mutation(api.functions.mealPlans.reopen, { planId })
@@ -291,7 +307,7 @@ describe('meal plans', () => {
     // Suggestions shown before (and not picked) count as turned down.
     const [names, , avoid] = claude.pickByName.mock.calls[1]!
     expect(avoid).toEqual(['Pasta pesto', 'Kip curry', 'Vispannetje'])
-    expect(names).toEqual(['tiramisu', 'kapot', 'stoofvlees'])
+    expect(names).toEqual(['kapot', 'stoofvlees'])
     const plan = await fixture.authorClient.query(
       api.functions.mealPlans.current,
     )

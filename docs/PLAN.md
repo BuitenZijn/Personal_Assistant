@@ -41,11 +41,13 @@ Ella's Dutch UI strings are replaced by English ones.
 Name: "Personal Assistant". Package scope renamed `@pa/*` → `@pa/*`. Expo
 app id `app.personalassistant.shop`.
 
-Convex deployment: `dev:tangible-aardvark-598`
-(`https://tangible-aardvark-598.eu-west-1.convex.cloud`, EU region, so
-personal data stays in the EU). Empty, so `npx convex dev` can push the schema
-and functions. Set in `.env` as `CONVEX_DEPLOYMENT` / `CONVEX_URL`, the same
-way Ella does.
+Convex deployment: `dev:youthful-finch-562`
+(`https://youthful-finch-562.eu-west-1.convex.cloud`, EU region, so
+personal data stays in the EU). Set in `.env` as `CONVEX_DEPLOYMENT` /
+`CONVEX_URL`, the same way Ella does. Phases 0 to 4 were first built on
+`tangible-aardvark-598`; on 2026-10-23 the project moved to
+`youthful-finch-562` (functions pushed, JWT keys and `ANTHROPIC_API_KEY`
+set). Data on the old deployment did not move; receipts are imported again.
 
 Git: `main` + `develop`, work on `develop`, same as Ella. Remote:
 https://github.com/BuitenZijn/Personal_Assistant; `pr-checks.yml` runs
@@ -281,14 +283,18 @@ green locally. Left: set `ANTHROPIC_API_KEY` on the deployment, then plan a
 week on the phone. (Tested on the deployment up to the Claude step: the
 catalog of 9,971 colruyt.be recipes downloads and is cached.)
 
-How it works (the Home tab is now "Dinners"):
+How it works (the Home tab is now "Meal plan"):
 
 1. **Find** (`findCandidates`): the catalog is colruyt.be's recipe sitemap
    turned into names ("gnocchi met aubergine en kip"), cached as a file for a
-   week. Claude Haiku 5.5 picks likely dinners by number from the full list
-   (cached in the prompt for an hour) for the household's profile: twice as
-   many as the suggestions wanted. Recently picked and turned-down recipes
-   are left out.
+   week. Names that are plainly not a dinner (desserts, soups, drinks,
+   breakfast, snacks) are left out, and each run takes a random 3,500 of the
+   rest, so the prompt stays under the 100K tokens above which Haiku costs
+   five times as much (the full list is ~200K tokens: $0.20 a run instead of
+   a few cents). Claude Haiku 5.5 picks likely dinners by number from those
+   for the household's profile: twice as many as the suggestions wanted,
+   asked again for the rest when it returns too few. Recently picked and
+   turned-down recipes are left out.
 2. **Read** (`readCandidate`): those pages are read one every 5 seconds;
    recipes read in the last 30 days are reused. Only dinners count.
 3. **Choose** (`chooseSuggestionsStep`): recipes over the cooking time are

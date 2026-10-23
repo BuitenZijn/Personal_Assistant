@@ -21,6 +21,7 @@ import type * as functions_recipes from "../functions/recipes.js";
 import type * as functions_users from "../functions/users.js";
 import type * as http from "../http.js";
 import type * as lib_auth from "../lib/auth.js";
+import type * as lib_claudeCost from "../lib/claudeCost.js";
 import type * as lib_errors from "../lib/errors.js";
 import type * as lib_households from "../lib/households.js";
 import type * as lib_mealPlanClaude from "../lib/mealPlanClaude.js";
@@ -56,6 +57,7 @@ declare const fullApi: ApiFromModules<{
   "functions/users": typeof functions_users;
   http: typeof http;
   "lib/auth": typeof lib_auth;
+  "lib/claudeCost": typeof lib_claudeCost;
   "lib/errors": typeof lib_errors;
   "lib/households": typeof lib_households;
   "lib/mealPlanClaude": typeof lib_mealPlanClaude;

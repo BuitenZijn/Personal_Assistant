@@ -8,6 +8,7 @@ import {
   InfoCardText,
   LinkText,
   MicroLabel,
+  MonoText,
   ProgressMeter,
   Skeleton,
   Spinner,
@@ -50,7 +51,7 @@ function showError(title: string, error: unknown) {
 function Screen({ children }: { children: React.ReactNode }) {
   const tabBarHeight = useBottomTabBarHeight()
   return (
-    <AppShell title='Dinners' showBack={false}>
+    <AppShell title='Meal plan' showBack={false}>
       <ScrollView
         contentContainerStyle={{
           flexGrow: 1,
@@ -100,6 +101,21 @@ function Progress({ plan, onRestart }: { plan: Plan; onRestart: () => void }) {
   )
 }
 
+/** What the Claude calls behind these suggestions cost, in US dollars. */
+function ClaudeCost({ plan }: { plan: Plan }) {
+  if (!plan.claudeCostUsd) return null
+  return (
+    <XStack justifyContent='center' alignItems='baseline' gap='$1'>
+      <Text size='$2' variant='muted'>
+        {plan.status === 'suggesting' ? 'Claude cost so far' : 'Claude cost'}
+      </Text>
+      <MonoText size='$2' variant='muted'>
+        ${plan.claudeCostUsd.toFixed(4)}
+      </MonoText>
+    </XStack>
+  )
+}
+
 /**
  * The week's dinners: suggest them, pick the ones you want, confirm. Every
  * household member sees and changes the same plan.
@@ -146,7 +162,7 @@ export function HomeScreen() {
 
   if (!data) {
     return (
-      <AppShell title='Dinners' showBack={false}>
+      <AppShell title='Meal plan' showBack={false}>
         <EmptyState
           icon={<CalendarDays size={30} color={emptyStateIconColor} />}
           title='Plan your dinners'
@@ -170,6 +186,7 @@ export function HomeScreen() {
           {week}
         </Text>
         <Progress plan={data} onRestart={startSuggesting} />
+        <ClaudeCost plan={data} />
       </Screen>
     )
   }
@@ -188,6 +205,7 @@ export function HomeScreen() {
         <Button variant='primary' onPress={startSuggesting}>
           <ButtonText variant='cta'>Try again</ButtonText>
         </Button>
+        <ClaudeCost plan={data} />
       </Screen>
     )
   }
@@ -238,6 +256,7 @@ export function HomeScreen() {
         <YStack alignItems='center'>
           <LinkText onPress={planAgain}>Plan again from scratch</LinkText>
         </YStack>
+        <ClaudeCost plan={data} />
       </Screen>
     )
   }
@@ -318,6 +337,7 @@ export function HomeScreen() {
           <LinkText onPress={planAgain}>Plan again</LinkText>
         </YStack>
       ) : null}
+      <ClaudeCost plan={data} />
     </Screen>
   )
 }

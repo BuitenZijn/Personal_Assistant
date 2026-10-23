@@ -108,7 +108,7 @@ export default function MainNavigator() {
         name='HomeTab'
         component={HomeStack}
         options={({ route }) => ({
-          tabBarLabel: 'Dinners',
+          tabBarLabel: 'Meal plan',
           tabBarIcon: ({ color, size, focused }) => (
             <TabIcon
               Icon={CalendarDays}

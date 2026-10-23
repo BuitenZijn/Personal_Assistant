@@ -9,6 +9,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
 import { z } from 'zod'
 import type { Doc } from '../_generated/dataModel'
+import { describeUsage } from './claudeCost'
 
 /** Cheap enough to run on every plan (see the plan's LLM decision). */
 const MODEL = 'claude-haiku-5-5'
@@ -94,53 +95,70 @@ const Picks = z.object({
     .describe('Best first.'),
 })
 
+/** Calls to get the picks asked for, when Claude returns too few. */
+const PICK_ATTEMPTS = 3
+
 /**
- * Indexes into `names` of `count` likely dinners. The names list is the
- * same for every plan, so it is cached.
+ * Indexes into `names` of `count` likely dinners, and what the calls cost.
+ * The names list is cached for the few minutes a run's calls take. Claude
+ * sometimes returns far fewer than asked for; then it is asked for the rest.
  */
 export async function pickByName(
   names: string[],
   profile: string,
   avoid: string[],
   count: number,
-): Promise<number[]> {
+): Promise<{ picks: number[]; costUsd: number }> {
   const list = names.map((name, i) => `${i} ${name}`).join('\n')
-  const response = await client().messages.parse({
-    model: MODEL,
-    max_tokens: 16000,
-    output_config: { effort: 'low', format: zodOutputFormat(Picks) },
-    system: [
-      { type: 'text', text: PICK_INSTRUCTIONS },
-      {
-        type: 'text',
-        text: `<recipes>\n${list}\n</recipes>`,
-        cache_control: { type: 'ephemeral', ttl: '1h' },
-      },
-    ],
-    messages: [
-      {
-        role: 'user',
-        content: [
-          `<household>\n${profile}\n</household>`,
-          avoid.length
-            ? `Don't pick these, they had them recently or turned them down:\n${avoid.join('\n')}`
-            : '',
-          `Pick ${count} recipes.`,
-        ]
-          .filter(Boolean)
-          .join('\n\n'),
-      },
-    ],
-  })
-  const picks = response.parsed_output?.picks ?? []
-  const seen = new Set<number>()
-  return picks
-    .map(p => p.number)
-    .filter(n => {
-      if (n < 0 || n >= names.length || seen.has(n)) return false
-      seen.add(n)
-      return true
+  const picked: number[] = []
+  let costUsd = 0
+  for (
+    let attempt = 1;
+    attempt <= PICK_ATTEMPTS && picked.length < count;
+    attempt++
+  ) {
+    const missing = count - picked.length
+    const response = await client().messages.parse({
+      model: MODEL,
+      max_tokens: 16000,
+      output_config: { effort: 'low', format: zodOutputFormat(Picks) },
+      system: [
+        { type: 'text', text: PICK_INSTRUCTIONS },
+        {
+          type: 'text',
+          text: `<recipes>\n${list}\n</recipes>`,
+          cache_control: { type: 'ephemeral' },
+        },
+      ],
+      messages: [
+        {
+          role: 'user',
+          content: [
+            `<household>\n${profile}\n</household>`,
+            avoid.length
+              ? `Don't pick these, they had them recently or turned them down:\n${avoid.join('\n')}`
+              : '',
+            picked.length
+              ? `Already picked, don't pick these again: ${picked.join(', ')}.`
+              : '',
+            `Pick exactly ${missing} different recipes.`,
+          ]
+            .filter(Boolean)
+            .join('\n\n'),
+        },
+      ],
     })
+    costUsd += describeUsage('Picking by name', response.usage)
+    for (const { number } of response.parsed_output?.picks ?? []) {
+      if (number >= 0 && number < names.length && !picked.includes(number)) {
+        picked.push(number)
+      }
+    }
+    console.log(
+      `Picking by name, attempt ${attempt}: ${picked.length} of ${count}`,
+    )
+  }
+  return { picks: picked.slice(0, count), costUsd }
 }
 
 // ============================================================================
@@ -180,6 +198,7 @@ export async function chooseSuggestions(
 ): Promise<{
   chosen: { index: number; reason: string }[]
   note: string | null
+  costUsd: number
 }> {
   const list = recipes
     .map((r, i) =>
@@ -205,6 +224,7 @@ export async function chooseSuggestions(
       },
     ],
   })
+  const costUsd = describeUsage('Choosing suggestions', response.usage)
   const output = response.parsed_output
   const seen = new Set<number>()
   const chosen = (output?.suggestions ?? []).filter(s => {
@@ -217,5 +237,6 @@ export async function chooseSuggestions(
   return {
     chosen: chosen.map(s => ({ index: s.number, reason: s.reason.trim() })),
     note: output?.note?.trim() || null,
+    costUsd,
   }
 }

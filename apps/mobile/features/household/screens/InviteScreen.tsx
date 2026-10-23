@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Alert, Share } from 'react-native'
+import { Alert, Platform, Share } from 'react-native'
 import {
   Button,
   ButtonText,
@@ -65,7 +65,18 @@ export function InviteScreen() {
   }
 
   const handleShare = (invited: Sent) => {
-    void Share.share({ message: inviteMessage({ householdName, ...invited }) })
+    const message = inviteMessage({ householdName, ...invited })
+    // A browser without a share sheet (most computers): copy it instead.
+    if (Platform.OS === 'web' && !navigator.share) {
+      void navigator.clipboard
+        .writeText(message)
+        .then(() =>
+          Alert.alert('Invite copied', 'Paste it in a message or an email.'),
+        )
+        .catch(() => Alert.alert('Send them this invite', message))
+      return
+    }
+    void Share.share({ message })
   }
 
   return (

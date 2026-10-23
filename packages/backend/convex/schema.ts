@@ -286,6 +286,8 @@ export default defineSchema({
     householdId: v.id('households'),
     recipeId: v.id('recipes'),
     addedAt: v.number(),
+    /** Marked as a favourite by a household member. */
+    favourite: v.optional(v.boolean()),
   })
     .index('by_household', ['householdId', 'addedAt'])
     .index('by_household_and_recipe', ['householdId', 'recipeId']),
@@ -353,6 +355,8 @@ export default defineSchema({
     /** Why there are fewer suggestions than asked for. */
     note: v.optional(v.string()),
     error: v.optional(v.string()),
+    /** What this run's Claude calls cost so far, in US dollars. */
+    claudeCostUsd: v.optional(v.number()),
     /** Bumped on every (re)start; steps from an older run stop themselves. */
     runId: v.number(),
     updatedAt: v.number(),

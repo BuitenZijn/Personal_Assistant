@@ -238,25 +238,31 @@ describe('saved recipes', () => {
       extractedBy: 'json-ld',
       saved: true,
     })
-    expect(await authorClient.query(api.functions.recipes.saved)).toEqual([
-      {
-        _id: id,
-        title: 'Stoofvlees met friet',
-        host: 'example.test',
-        imageUrl: 'https://example.test/stew.jpg',
-        totalMinutes: 150,
-        servings: 4,
-      },
-    ])
+    // Not in this week's plan: with the other recipes.
+    expect(await authorClient.query(api.functions.recipes.saved)).toEqual({
+      thisWeek: [],
+      favourites: [],
+      other: [
+        {
+          _id: id,
+          title: 'Stoofvlees met friet',
+          host: 'example.test',
+          imageUrl: 'https://example.test/stew.jpg',
+          totalMinutes: 150,
+          servings: 4,
+          favourite: false,
+        },
+      ],
+    })
 
     // Read recently: not fetched again, and not saved twice.
     await authorClient.action(api.functions.recipes.addFromUrl, {
       url: 'https://example.test/stoofvlees',
     })
     expect(fetchMock).toHaveBeenCalledTimes(1)
-    expect(await authorClient.query(api.functions.recipes.saved)).toHaveLength(
-      1,
-    )
+    expect(
+      (await authorClient.query(api.functions.recipes.saved)).other,
+    ).toHaveLength(1)
   })
 
   it("keeps each household's saved recipes to itself", async () => {
@@ -266,7 +272,11 @@ describe('saved recipes', () => {
     const id = await authorClient.action(api.functions.recipes.addFromUrl, {
       url: 'https://example.test/stoofvlees',
     })
-    expect(await playerClient.query(api.functions.recipes.saved)).toEqual([])
+    expect(await playerClient.query(api.functions.recipes.saved)).toEqual({
+      thisWeek: [],
+      favourites: [],
+      other: [],
+    })
     expect(
       await playerClient.query(api.functions.recipes.get, { id }),
     ).toMatchObject({ saved: false })
@@ -299,7 +309,47 @@ describe('saved recipes', () => {
     await authorClient.mutation(api.functions.recipes.removeSaved, {
       recipeId,
     })
-    expect(await authorClient.query(api.functions.recipes.saved)).toEqual([])
+    expect(await authorClient.query(api.functions.recipes.saved)).toEqual({
+      thisWeek: [],
+      favourites: [],
+      other: [],
+    })
+  })
+
+  it('marks a saved recipe as a favourite', async () => {
+    const { authorClient, playerClient } = await household()
+    await playerClient.mutation(api.functions.households.setUp)
+    serve({ 'https://example.test/stoofvlees': recipePage(STEW) })
+    const recipeId = await authorClient.action(
+      api.functions.recipes.addFromUrl,
+      { url: 'https://example.test/stoofvlees' },
+    )
+    await authorClient.mutation(api.functions.recipes.setFavourite, {
+      recipeId,
+      favourite: true,
+    })
+    // A favourite moves from the other recipes to the favourites.
+    let saved = await authorClient.query(api.functions.recipes.saved)
+    expect(saved.other).toEqual([])
+    expect(saved.favourites).toEqual([
+      expect.objectContaining({ _id: recipeId, favourite: true }),
+    ])
+    await authorClient.mutation(api.functions.recipes.setFavourite, {
+      recipeId,
+      favourite: false,
+    })
+    saved = await authorClient.query(api.functions.recipes.saved)
+    expect(saved.favourites).toEqual([])
+    expect(saved.other[0]).toMatchObject({ favourite: false })
+
+    // Only a recipe your own household saved.
+    await expectPermanentError(
+      playerClient.mutation(api.functions.recipes.setFavourite, {
+        recipeId,
+        favourite: true,
+      }),
+      'NOT_FOUND',
+    )
   })
 
   it("deletes a household's saved recipes with it", async () => {

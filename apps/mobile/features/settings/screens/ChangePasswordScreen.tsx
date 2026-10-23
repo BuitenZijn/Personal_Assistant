@@ -101,7 +101,8 @@ export function ChangePasswordScreen() {
                   <Text size='$4' weight='semibold'>
                     {email}
                   </Text>
-                  . Open it on this phone to choose a new password.
+                  . Open it on your phone, where the app is, to choose a new
+                  password.
                 </Text>
               </YStack>
             ) : (

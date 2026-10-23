@@ -1,8 +1,9 @@
 import React, { useState } from 'react'
-import { FlatList } from 'react-native'
+import { Alert, SectionList } from 'react-native'
 import {
   Button,
   ButtonText,
+  MicroLabel,
   Skeleton,
   StyledInput,
   Text,
@@ -13,14 +14,21 @@ import {
 import { useNavigation } from '@react-navigation/native'
 import type { StackNavigationProp } from '@react-navigation/stack'
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs'
+import { useMutation } from 'convex/react'
 import { api } from '@pa/backend/api'
 import { ChefHat, Plus, Search } from 'lucide-react-native'
+import type { FunctionReturnType } from 'convex/server'
 import type { MainStackParamList } from '../../../navigation/types'
 import { AppShell } from '../../../components/shell'
 import { EmptyState, emptyStateIconColor } from '../../../components/kit'
 import { useQueryState } from '../../../lib/convex'
-import { RecipeCard } from '../components/RecipeCard'
+import { convexErrorData } from '../../../lib/convexErrors'
+import { SwipeableRecipeCard } from '../components/RecipeCard'
 import { matchesSearch } from '../format'
+
+type SavedRecipe = FunctionReturnType<
+  typeof api.functions.recipes.saved
+>['other'][number]
 
 type NavigationProp = StackNavigationProp<MainStackParamList>
 
@@ -48,14 +56,32 @@ function LoadingList() {
   )
 }
 
-/** Your saved recipes, newest first, with search. */
+function showError(title: string, error: unknown) {
+  Alert.alert(
+    title,
+    convexErrorData(error)?.message ?? 'Check your connection and try again.',
+  )
+}
+
+/**
+ * Your saved recipes, newest first, with search: this week's dinners
+ * first, then your favourites, then the others. Swipe a card to delete it;
+ * tap the heart to keep it as a favourite.
+ */
 export function RecipesScreen() {
   const navigation = useNavigation<NavigationProp>()
   const tabBarHeight = useBottomTabBarHeight()
   const saved = useQueryState(api.functions.recipes.saved)
+  const removeSaved = useMutation(api.functions.recipes.removeSaved)
+  const setFavourite = useMutation(api.functions.recipes.setFavourite)
   const [search, setSearch] = useState('')
 
-  if (saved.status === 'ready' && saved.data.length === 0) {
+  if (
+    saved.status === 'ready' &&
+    saved.data.thisWeek.length === 0 &&
+    saved.data.favourites.length === 0 &&
+    saved.data.other.length === 0
+  ) {
     return (
       <AppShell title='Recipes' showBack={false} rightAction={<AddButton />}>
         <EmptyState
@@ -76,19 +102,43 @@ export function RecipesScreen() {
   }
 
   const term = search.trim()
-  const recipes = (saved.data ?? []).filter(r => matchesSearch(r.title, term))
+  const matching = (list: SavedRecipe[] | undefined) =>
+    (list ?? []).filter(r => matchesSearch(r.title, term))
+  const sections = [
+    { title: 'This week’s dinners', data: matching(saved.data?.thisWeek) },
+    { title: 'Favourite recipes', data: matching(saved.data?.favourites) },
+    { title: 'Other recipes', data: matching(saved.data?.other) },
+  ].filter(s => s.data.length > 0)
+
+  const remove = (recipe: SavedRecipe) =>
+    void removeSaved({ recipeId: recipe._id }).catch(error =>
+      showError("We couldn't delete this recipe", error),
+    )
+  const toggleFavourite = (recipe: SavedRecipe) =>
+    void setFavourite({
+      recipeId: recipe._id,
+      favourite: !recipe.favourite,
+    }).catch(error => showError("We couldn't change your favourites", error))
 
   return (
     <AppShell title='Recipes' showBack={false} rightAction={<AddButton />}>
-      <FlatList
-        data={recipes}
+      <SectionList
+        sections={sections}
         keyExtractor={item => item._id}
+        stickySectionHeadersEnabled={false}
+        renderSectionHeader={({ section }) => (
+          <MicroLabel paddingHorizontal='$1' paddingTop='$3'>
+            {section.title}
+          </MicroLabel>
+        )}
         renderItem={({ item }) => (
-          <RecipeCard
+          <SwipeableRecipeCard
             recipe={item}
             onPress={() =>
               navigation.navigate('Recipe', { recipeId: item._id })
             }
+            onToggleFavourite={() => toggleFavourite(item)}
+            onDelete={() => remove(item)}
           />
         )}
         keyboardShouldPersistTaps='handled'
